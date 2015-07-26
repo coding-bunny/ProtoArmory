@@ -108,7 +108,7 @@ function ProtoArmory:new(o)
   
   -- initialize variables here
   self.CharAddon = Apollo.GetAddon("Character")
-  self.tData = { 
+  o.tData = { 
     arCharacter = {},
     arProperties = {},
     arPrimaryAttributes = {},
@@ -372,15 +372,11 @@ function ProtoArmory:CollectEquipment()
       local itemInfo = Item.GetDetailedInfo(itemEquipped)
       local itemSlot = slotsIdToString[itemEquipped:GetSlot()]
       
-      self.tData.arEquippedItems[itemSlot] = {}
-      
-      table.insert(
-        self.tData.arEquippedItems[itemSlot], {
-          strName = itemSlot, 
-          strValue  = itemEquipped:GetName().." "..itemEquipped:GetItemId(), 
-          strQuality  = qualityIdToString[itemEquipped:GetItemQuality()] 
-        }
-      )
+      self.tData.arEquippedItems[itemSlot] = {
+        strName = itemSlot, 
+        strValue  = itemEquipped:GetName().." "..itemEquipped:GetItemId(), 
+        strQuality  = qualityIdToString[itemEquipped:GetItemQuality()] 
+      }
       
       local itemRuneData = itemEquipped:GetRuneSlots()
       
@@ -389,14 +385,10 @@ function ProtoArmory:CollectEquipment()
         for nRuneIndex, tCurrRuneSlot in pairs(itemRuneData.arRuneSlots) do
           local itemRune = Item.GetDataFromId(tCurrRuneSlot.idRune)
           
-          self.tData.arEquippedItems[itemSlot]["Runes"][nRuneIndex] = {}
-          
-          table.insert(
-            self.tData["arEquippedItems"][itemSlot]["Runes"][nRuneIndex], {
-              strName = itemRune:GetName(),
-              strType = runeIdToString[tCurrRuneSlot.eType]
-            }
-          )
+          self.tData.arEquippedItems[itemSlot]["Runes"][nRuneIndex] = {
+            strName = itemRune:GetName(),
+            strType = runeIdToString[tCurrRuneSlot.eType]
+          }
         end
       end
     end
@@ -417,7 +409,7 @@ function ProtoArmory:CollectRuneSets()
   end
 
   for k,v in pairs(arRuneSetsTemp) do
-    self.tData.arRuneSets[k] = { strName = v.strName, nValue = v.nPower, nMaxValue = v.nMaxPower }
+    self.tData.arRuneSets[k] = { strName = v.strName, nPower = v.nPower, nMaxPower = v.nMaxPower }
   end
 end
 
@@ -429,7 +421,6 @@ function ProtoArmory:OnProtoArmoryOn()
   self:CollectSecondaryAttributes()
 	self:CollectEquipment()
   self:CollectRuneSets()
-	
   self:GenerateXML()
 	
 	--self.wndMain:Invoke() -- show the window
@@ -507,11 +498,7 @@ function ProtoArmory:WriteEquipment(xmlDoc, xNode)
     local itemNode = xmlDoc:NewNode("item", { itemslot = k })
     xEquipment:AddChild(itemNode)
     
-    local propertyNode = xmlDoc:NewNode("properties", {
-      strName = v.strName, 
-      strValue  = v.strValue, 
-      strQuality  = v.strQuality 
-    })
+    local propertyNode = xmlDoc:NewNode("properties", v)
     itemNode:AddChild(propertyNode)
     
     -- Now the runes of it.
@@ -532,11 +519,7 @@ function ProtoArmory:WriteRuneSets(xmlDoc, xNode)
   xNode:AddChild(xRuneSets)
   
   for k,v in pairs(self.tData.arRuneSets) do
-    local node = xmlDoc:NewNode("set", {
-      strName = v.strName,
-      nPower = v.nPower,
-      nMaxPower = v.nMaxPower
-    })
+    local node = xmlDoc:NewNode("set", v)
     xRuneSets:AddChild(node)
   end
 end
