@@ -430,14 +430,10 @@ end
 function ProtoArmory:GenerateXML()
   -- Create the document
   local xDoc = XmlDocument.New()
-    
-  -- Set the root element
-  local root = xDoc:NewNode("?xml version=\"1.0\"?")
-  xDoc:SetRoot(root)
   
   -- Add the child element to represent our character
   local characterNode = xDoc:NewNode("character")
-  root:AddChild(characterNode)
+  xDoc:SetRoot(characterNode)
   
   self:WriteCharacterInfo(xDoc, characterNode)
   self:WritePropertiesInfo(xDoc, characterNode)
@@ -446,7 +442,7 @@ function ProtoArmory:GenerateXML()
   self:WriteEquipment(xDoc, characterNode)
   self:WriteRuneSets(xDoc, characterNode)
   
-  -- TODO: Output
+  -- Output
   Print(xDoc:Serialize())
 end
 
@@ -498,16 +494,16 @@ function ProtoArmory:WriteEquipment(xmlDoc, xNode)
     local itemNode = xmlDoc:NewNode("item", { itemslot = k })
     xEquipment:AddChild(itemNode)
     
-    local propertyNode = xmlDoc:NewNode("properties", v)
+    local propertyNode = xmlDoc:NewNode("properties", { strName = v.strName, strValue = v.strValue, strQuality = v.strQuality })
     itemNode:AddChild(propertyNode)
     
-    -- Now the runes of it.
-    local runeNode = xmlDoc:NewNode("runes")
-    itemNode:AddChild(runeNode)
-    
+    -- Now the runes of it.    
     if self.tData.arEquippedItems[k]["Runes"] then
-      for j = 0, #self.tData.arEquippedItems[k]["Runes"] do
-        local node = xmlDoc:NewNode("rune", self.tData.arEquippedItems[k]["Runes"])
+      local runeNode = xmlDoc:NewNode("runes")
+      itemNode:AddChild(runeNode)
+      
+      for i = 0, #self.tData.arEquippedItems[k]["Runes"] do            
+        local node = xmlDoc:NewNode("rune", self.tData.arEquippedItems[k]["Runes"][i])
         runeNode:AddChild(node)
       end
     end
