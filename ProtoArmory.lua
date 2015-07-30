@@ -450,7 +450,7 @@ function ProtoArmory:WriteCharacterInfo(xmlDoc, xNode)
   local xInfo = xmlDoc:NewNode("character_info")
   xNode:AddChild(xInfo)
      
-  for i = 0, #self.tData.arCharacter do
+  for i = 1, #self.tData.arCharacter do
     local node = xmlDoc:NewNode("attribute", self.tData.arCharacter[i])
     xInfo:AddChild(node)
   end
@@ -460,7 +460,7 @@ function ProtoArmory:WritePropertiesInfo(xmlDoc, xNode)
   local xProperties = xmlDoc:NewNode("properties")
   xNode:AddChild(xProperties)
   
-  for i = 0, #self.tData.arProperties do
+  for i = 1, #self.tData.arProperties do
     local node = xmlDoc:NewNode("attribute", self.tData.arProperties[i])
     xProperties:AddChild(node)
   end
@@ -470,7 +470,7 @@ function ProtoArmory:WritePrimaryAttributes(xmlDoc, xNode)
   local xAttributes = xmlDoc:NewNode("primary_attributes")
   xNode:AddChild(xAttributes)
   
-  for i = 0, #self.tData.arPrimaryAttributes do
+  for i = 1, #self.tData.arPrimaryAttributes do
     local node = xmlDoc:NewNode("attribute", self.tData.arPrimaryAttributes[i])
     xAttributes:AddChild(node)
   end
@@ -480,7 +480,7 @@ function ProtoArmory:WriteSecondaryAttributes(xmlDoc, xNode)
   local xAttributes = xmlDoc:NewNode("secondary_attributes")
   xNode:AddChild(xAttributes)
   
-  for i = 0, #self.tData.arSecondaryAttributes do
+  for i = 1, #self.tData.arSecondaryAttributes do
     local node = xmlDoc:NewNode("attribute", self.tData.arSecondaryAttributes[i])
     xAttributes:AddChild(node)
   end
@@ -502,7 +502,7 @@ function ProtoArmory:WriteEquipment(xmlDoc, xNode)
       local runeNode = xmlDoc:NewNode("runes")
       itemNode:AddChild(runeNode)
       
-      for i = 0, #self.tData.arEquippedItems[k]["Runes"] do            
+      for i = 1, #self.tData.arEquippedItems[k]["Runes"] do            
         local node = xmlDoc:NewNode("rune", self.tData.arEquippedItems[k]["Runes"][i])
         runeNode:AddChild(node)
       end
