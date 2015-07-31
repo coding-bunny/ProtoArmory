@@ -374,8 +374,10 @@ function ProtoArmory:CollectEquipment()
       
       self.tData.arEquippedItems[itemSlot] = {
         strName = itemSlot, 
-        strValue  = itemEquipped:GetName().." "..itemEquipped:GetItemId(), 
-        strQuality  = qualityIdToString[itemEquipped:GetItemQuality()] 
+        strValue  = itemEquipped:GetName(),
+        nId = itemEquipped:GetItemId(), 
+        strQuality  = qualityIdToString[itemEquipped:GetItemQuality()],
+        nLevel = itemEquipped:GetItemPower() 
       }
       
       local itemRuneData = itemEquipped:GetRuneSlots()
@@ -443,7 +445,9 @@ function ProtoArmory:GenerateXML()
   self:WriteRuneSets(xDoc, characterNode)
   
   -- Output
-  Print(xDoc:Serialize())
+  --Print(xDoc:Serialize())
+  self.strXml = "<?xml version=\"1.0\"?>\n\r"..xDoc:Serialze()
+    
 end
 
 function ProtoArmory:WriteCharacterInfo(xmlDoc, xNode)
@@ -494,7 +498,7 @@ function ProtoArmory:WriteEquipment(xmlDoc, xNode)
     local itemNode = xmlDoc:NewNode("item", { itemslot = k })
     xEquipment:AddChild(itemNode)
     
-    local propertyNode = xmlDoc:NewNode("properties", { strName = v.strName, strValue = v.strValue, strQuality = v.strQuality })
+    local propertyNode = xmlDoc:NewNode("properties", { strName = v.strName, strValue = v.strValue, strQuality = v.strQuality, nId = v.nId, nLevel = v.nLevel })
     itemNode:AddChild(propertyNode)
     
     -- Now the runes of it.    
@@ -521,36 +525,15 @@ function ProtoArmory:WriteRuneSets(xmlDoc, xNode)
 end
   
 function ProtoArmory:OnSave(eLevel)
-	if eLevel == GameLib.CodeEnumAddonSaveLevel.General then return end
-	local playerName = GameLib.GetPlayerUnit():GetName()
-	local tPlayer = { charName = playerName, charUnit = { arPrimaryAttributes, arPropertiesFiltered, arSecondaryAttributes } }
-	local playerExist = 0
-	local n = 0
-	local tSave = self.tSavedData or {}
-	
-	if self.tSavedData and eLevel ~= GameLib.CodeEnumAddonSaveLevel.Character then
-		for k, v in pairs(tSave) do
-			n = n + 1
-			if v["charName"] == playerName then
-				tSave[n] = tPlayer
-				playerExist = 1
-			end
-		end
-	else
-		tSave = { tPlayer }
-		playerExist = 1
+	if eLevel == GameLib.CodeEnumAddonSaveLevel.General then return end	
+	if self.tData and eLevel ~= GameLib.CodeEnumAddonSaveLevel.Character then
+    return { strXml = self.strXml, tData = self.tData }		
 	end
-	
-	if playerExist == 0 then
-		tSave[n+1] = tPlayer
-	end
-	
-	return tSave
 end
 
 function ProtoArmory:OnRestore(eLevel, tData)
 	if eLevel ~= GameLib.CodeEnumAddonSaveLevel.Account then return end
-	self.tSavedData = tData
+	self.tData = tData.tData
 end
 
 function ProtoArmory:GetJabbitholeItemId(item)
