@@ -1,6 +1,3 @@
 [submodule "XmlDocument"]
 	path = XmlDocument
 	url = https://github.com/wildstarnasa/XmlDocument.git
-[submodule "JScanBot"]
-	path = JScanBot
-	url = https://github.com/wildstarnasa/JScanBot.git

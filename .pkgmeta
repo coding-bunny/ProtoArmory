@@ -1,0 +1,3 @@
+externals:
+	XmlDocument:
+		url: https://github.com/wildstarnasa/XmlDocument.git
