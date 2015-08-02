@@ -108,7 +108,7 @@ function ProtoArmory:new(o)
   
   -- initialize variables here
   self.CharAddon = Apollo.GetAddon("Character")
-  o.tData = { 
+  self.tData = { 
     arCharacter = {},
     arProperties = {},
     arPrimaryAttributes = {},
@@ -225,6 +225,21 @@ function ProtoArmory:CollectCharacterInfo()
   self:StoreCharacterAttribute("Class", classIdToString[unitPlayer:GetClassId()] or "")
   self:StoreCharacterAttribute("Path", pathIdToString[unitPlayer:GetPlayerPathType()] or "")
   self:StoreCharacterAttribute("Path Level", PlayerPathLib.GetPathLevel())
+  self:CollectGuildRank()
+end
+
+-- Collects the guild rank of the current Unit.
+-- This is done by iterating over the "guilds" the character is part of and finding the
+-- actual guild, then reading out the rank.
+function ProtoArmory:CollectGuildRank()
+  local unitPlayer = GameLib.GetPlayerUnit()
+  local arGuilds = GuildLib.GetGuilds()
+  
+  for i = 1, #arGuilds do
+    if arGuilds[i]:GetType() == 1 then
+      self:StoreCharacterAttribute("nGuildRank", arGuilds[i]:GetMyRank())
+    end
+  end
 end
 
 -- Collects all properties of the character and stores the ones we're interested about
@@ -384,12 +399,18 @@ function ProtoArmory:CollectEquipment()
       
       if itemRuneData then
         self.tData.arEquippedItems[itemSlot]["Runes"] = {}
+        
         for nRuneIndex, tCurrRuneSlot in pairs(itemRuneData.arRuneSlots) do
           local itemRune = Item.GetDataFromId(tCurrRuneSlot.idRune)
+          local runeInfo = itemRune:GetRuneInfo()
           
           self.tData.arEquippedItems[itemSlot]["Runes"][nRuneIndex] = {
             strName = itemRune:GetName(),
-            strType = runeIdToString[tCurrRuneSlot.eType]
+            strType = runeIdToString[tCurrRuneSlot.eType],
+            nId = itemRune:GetItemId(),
+            strAttribute = runeInfo.strUnotPropertyName,
+            -- TODO: Amount of attribute increased
+            strQuality = qualityIdToString[itemRune:GetItemQuality()]                        
           }
         end
       end
@@ -446,7 +467,7 @@ function ProtoArmory:GenerateXML()
   
   -- Output
   --Print(xDoc:Serialize())
-  self.strXml = "<?xml version=\"1.0\"?>\n\r"..xDoc:Serialze()
+  self.strXml = "<?xml version=\"1.0\"?>\n\r"..xDoc:Serialize()
     
 end
 
