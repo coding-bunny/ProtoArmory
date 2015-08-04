@@ -508,7 +508,7 @@ function ProtoArmory:CollectAchievements()
       -- Iterate over those and collect the Achievements for them.
       for l = 1, #arTree[i].tGroups[j].tSubGroups do
         tAchievement.arGroups[j].arSubGroups[l] = {
-          strName =  arTree[i].tGroups[j].tSubGroups[l].nSubGroupName,
+          strName =  arTree[i].tGroups[j].tSubGroups[l].strSubGroupName,
           nId =  arTree[i].tGroups[j].tSubGroups[l].nSubGroupId,
           arAchievements = {}
         }
