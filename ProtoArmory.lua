@@ -115,7 +115,9 @@ function ProtoArmory:new(o)
     arSecondaryAttributes = {},
     arEquippedItems = {},
     arRuneSets = {},
-    arAchievements = {}
+    arAchievements = {},
+    arPets = {},
+    arMounts = {}
   }
   
   return o
@@ -439,7 +441,7 @@ end
 
 -- Collects all the Achievements that have been obtained for the current character.
 -- This does not include the achievements from the Trade skills window.
-function ProtoArmory:CollectAchievements()  
+function ProtoArmory:CollectAchievements()
   -- Collect all the categories that exist for achievements.
   -- This is a complete tree we will have to navigate.
   local arTree = AchievementsLib.GetAchievementCategoryTree()
@@ -537,6 +539,38 @@ function ProtoArmory:CollectAchievements()
   end  
 end
 
+-- Collects all the pets available for the player and stores them inside the
+-- arPets array.
+function ProtoArmory:CollectPets()
+  local arPets = GameLib.GetVanityPetList()
+  
+  for i = 1, #arPets do
+    if arPets[i].bIsKnown then
+      local tPet = {
+        nId = arPets[i].nId,
+        strName = arPets[i].strName
+      }
+      
+      table.insert(self.tData.arPets, tPet)
+    end
+  end
+end
+
+function ProtoArmory:CollectMounts()
+  local arMounts = GameLib.GetMountList()
+  
+  for i = 1, #arMounts do
+    if arMounts[i].bIsKnown then
+      local tMount = {
+        nId = arMounts[i].nId,
+        strName = arMounts[i].strName
+      }
+      
+      table.insert(self.tData.arMounts, tMount)
+    end
+  end
+end
+
 -- on SlashCommand "/armory"
 function ProtoArmory:OnProtoArmoryOn()
 	self:CollectCharacterInfo()
@@ -546,6 +580,8 @@ function ProtoArmory:OnProtoArmoryOn()
 	self:CollectEquipment()
   self:CollectRuneSets()
   self:CollectAchievements()
+  self:CollectPets()
+  self:CollectMounts()
   self:GenerateXML()
 	
 	--self.wndMain:Invoke() -- show the window
@@ -567,6 +603,8 @@ function ProtoArmory:GenerateXML()
   self:WriteEquipment(xDoc, characterNode)
   self:WriteRuneSets(xDoc, characterNode)
   self:WriteAchievements(xDoc, characterNode)
+  self:WritePets(xDoc, characterNode)
+  self:WriteMounts(xDoc, characterNode)
   
   -- Output
   --Print(xDoc:Serialize())
@@ -721,6 +759,27 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
       end    
     end
   end
+end
+
+-- Writes out all the pets stored.
+function ProtoArmory:WritePets(xmlDoc, xNode)
+    local xPets = xmlDoc:NewNode("pets")
+    xNode:AddChild(xPets)
+    
+    for i = 1, #self.tData.arPets do
+      local nNode = xmlDoc:NewNode("pet", self.tData.arPets[i])
+      xPets:AddChild(nNode)
+    end
+end
+
+function ProtoArmory:WriteMounts(xmlDoc, xNode)
+    local xMounts = xmlDoc:NewNode("mounts")
+    xNode:AddChild(xMounts)
+    
+    for i = 1, #self.tData.arMounts do
+      local nNode = xmlDoc:NewNode("mount", self.tData.arMounts[i])
+      xMounts:AddChild(nNode)
+    end
 end
 
 function ProtoArmory:OnSave(eLevel)
