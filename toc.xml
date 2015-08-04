@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Addon Author="Psyphil" APIVersion="10" Name="ProtoArmory" Description="Data bot for Protoarmory.com" Version="0.1a">
+<Addon Author="Olivar Nax" APIVersion="10" Name="ProtoArmory" Description="Data bot for Protoarmory.com" Version="0.1a">
 	<Script Name="XmlDocument/XmlDocument.lua"/>    
     <Script Name="ProtoArmory.lua"/>
     <Form Name="ProtoArmory.xml"/>
