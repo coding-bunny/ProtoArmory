@@ -114,7 +114,8 @@ function ProtoArmory:new(o)
     arPrimaryAttributes = {},
     arSecondaryAttributes = {},
     arEquippedItems = {},
-    arRuneSets = {}
+    arRuneSets = {},
+    arAchievements = {}
   }
   
   return o
@@ -436,6 +437,106 @@ function ProtoArmory:CollectRuneSets()
   end
 end
 
+-- Collects all the Achievements that have been obtained for the current character.
+-- This does not include the achievements from the Trade skills window.
+function ProtoArmory:CollectAchievements()  
+  -- Collect all the categories that exist for achievements.
+  -- This is a complete tree we will have to navigate.
+  local arTree = AchievementsLib.GetAchievementCategoryTree()
+  
+  -- Iterate over the entire tree, and let's collect the achievements per group and sub group.
+  for i = 1, #arTree do
+    local tAchievement = {} -- Create a new empty array for this category.
+    
+    -- Store the Category Information and prepare the achievement array 
+    -- as well as the group array to hold all groups of this category.
+    tAchievement.nId = arTree[i].nCategoryId
+    tAchievement.strName = arTree[i].strCategoryName
+    tAchievement.arAchievements = {}
+    tAchievement.arGroups = {}
+    
+    -- Collect the achievements for the Top Category.
+    local arAchievements = AchievementsLib.GetAchievementsForCategory(arTree[i].nCategoryId, true)    
+    
+    -- Iterate over each achievement we have found for this category.
+    for j = 1, #arAchievements do
+      -- If the achievement is complete, then store it inside the arAchievement array
+      -- of the top category.
+      if arAchievements[j]:IsComplete() then
+        local achievement = {
+          strName = arAchievements[j]:GetName(),
+          nId = arAchievements[j]:GetId(),
+          nPoints = arAchievements[j]:GetPoints(),
+        }
+            
+        table.insert(tAchievement.arAchievements, achievement)
+      end
+    end
+    
+    -- Now collecting the groups that actually belong to our Top Category.
+    -- We will iterate over the Categories in the tGroups table and repeat the
+    -- entire process.
+    for j = 1, #arTree[i].tGroups do
+      tAchievement.arGroups[j] = {
+        nId = arTree[i].tGroups[j].nGroupId,
+        strName = arTree[i].tGroups[j].strGroupName,
+        arSubGroups = {},
+        arAchievements = {}
+      }
+      
+      -- Collect the Achievements for this SubGroup.
+      local arGroupAchievements = AchievementsLib.GetAchievementsForCategory(arTree[i].tGroups[j].nGroupId, true)    
+    
+      -- Iterate over each achievement we have found for this Group
+      for k = 1, #arGroupAchievements do
+        -- If the achievement has been completed, then store it in the
+        -- arAchievements array of the current Group.
+        if arGroupAchievements[k]:IsComplete() then
+          local achievement = {
+            strName = arGroupAchievements[k]:GetName(),
+            nId = arGroupAchievements[k]:GetId(),
+            nPoints = arGroupAchievements[k]:GetPoints()
+          }
+            
+          table.insert(tAchievement.arGroups[j].arAchievements, achievement)
+        end
+      end
+      
+      -- And Since each Group can have SubGroups again, we will
+      -- Iterate over those and collect the Achievements for them.
+      for l = 1, #arTree[i].tGroups[j].tSubGroups do
+        tAchievement.arGroups[j].arSubGroups[l] = {
+          strName =  arTree[i].tGroups[j].tSubGroups[l].nSubGroupName,
+          nId =  arTree[i].tGroups[j].tSubGroups[l].nSubGroupId,
+          arAchievements = {}
+        }
+        
+        -- And finally collect all Achievements for the final SubGroup that
+        -- have been completed.
+        local arSubGroupAchievements = AchievementsLib.GetAchievementsForCategory(arTree[i].tGroups[j].tSubGroups[l].nSubGroupId, true)
+        
+        -- Iterate over the collection and copy over the Achievements
+        -- that have been completed by the Player.
+        for m = 1, #arSubGroupAchievements do
+          if arSubGroupAchievements[m]:IsComplete() then
+            local achievement = {
+              strName = arSubGroupAchievements[m]:GetName(),
+              nId = arSubGroupAchievements[m]:GetId(),
+              nPoints = arSubGroupAchievements[m]:GetPoints()
+            }
+            
+            -- Store the achievement in the array of our subGroup.
+            table.insert(tAchievement.arGroups[j].arSubGroups[l].arAchievements, achievement)
+          end
+        end
+      end
+    end
+    
+    -- Finally store our generated achievement table in our tData object.
+    table.insert(self.tData.arAchievements, tAchievement)
+  end  
+end
+
 -- on SlashCommand "/armory"
 function ProtoArmory:OnProtoArmoryOn()
 	self:CollectCharacterInfo()
@@ -444,6 +545,7 @@ function ProtoArmory:OnProtoArmoryOn()
   self:CollectSecondaryAttributes()
 	self:CollectEquipment()
   self:CollectRuneSets()
+  self:CollectAchievements()
   self:GenerateXML()
 	
 	--self.wndMain:Invoke() -- show the window
@@ -464,10 +566,11 @@ function ProtoArmory:GenerateXML()
   self:WriteSecondaryAttributes(xDoc, characterNode)
   self:WriteEquipment(xDoc, characterNode)
   self:WriteRuneSets(xDoc, characterNode)
+  self:WriteAchievements(xDoc, characterNode)
   
   -- Output
   --Print(xDoc:Serialize())
-  self.strXml = "<?xml version=\"1.0\"?>\n\r"..xDoc:Serialize()
+  self.strXml = "<?xml version=\"1.0\"?>\r\n"..xDoc:Serialize()
     
 end
 
@@ -476,8 +579,8 @@ function ProtoArmory:WriteCharacterInfo(xmlDoc, xNode)
   xNode:AddChild(xInfo)
      
   for i = 1, #self.tData.arCharacter do
-    local node = xmlDoc:NewNode("attribute", self.tData.arCharacter[i])
-    xInfo:AddChild(node)
+    local nNode = xmlDoc:NewNode("attribute", self.tData.arCharacter[i])
+    xInfo:AddChild(nNode)
   end
 end
 
@@ -486,8 +589,8 @@ function ProtoArmory:WritePropertiesInfo(xmlDoc, xNode)
   xNode:AddChild(xProperties)
   
   for i = 1, #self.tData.arProperties do
-    local node = xmlDoc:NewNode("attribute", self.tData.arProperties[i])
-    xProperties:AddChild(node)
+    local nNode = xmlDoc:NewNode("attribute", self.tData.arProperties[i])
+    xProperties:AddChild(nNode)
   end
 end
 
@@ -496,8 +599,8 @@ function ProtoArmory:WritePrimaryAttributes(xmlDoc, xNode)
   xNode:AddChild(xAttributes)
   
   for i = 1, #self.tData.arPrimaryAttributes do
-    local node = xmlDoc:NewNode("attribute", self.tData.arPrimaryAttributes[i])
-    xAttributes:AddChild(node)
+    local nNode = xmlDoc:NewNode("attribute", self.tData.arPrimaryAttributes[i])
+    xAttributes:AddChild(nNode)
   end
 end
 
@@ -506,8 +609,8 @@ function ProtoArmory:WriteSecondaryAttributes(xmlDoc, xNode)
   xNode:AddChild(xAttributes)
   
   for i = 1, #self.tData.arSecondaryAttributes do
-    local node = xmlDoc:NewNode("attribute", self.tData.arSecondaryAttributes[i])
-    xAttributes:AddChild(node)
+    local nNode = xmlDoc:NewNode("attribute", self.tData.arSecondaryAttributes[i])
+    xAttributes:AddChild(nNode)
   end
 end
 
@@ -528,8 +631,8 @@ function ProtoArmory:WriteEquipment(xmlDoc, xNode)
       itemNode:AddChild(runeNode)
       
       for i = 1, #self.tData.arEquippedItems[k]["Runes"] do            
-        local node = xmlDoc:NewNode("rune", self.tData.arEquippedItems[k]["Runes"][i])
-        runeNode:AddChild(node)
+        local nNode = xmlDoc:NewNode("rune", self.tData.arEquippedItems[k]["Runes"][i])
+        runeNode:AddChild(nNode)
       end
     end
   end
@@ -540,21 +643,91 @@ function ProtoArmory:WriteRuneSets(xmlDoc, xNode)
   xNode:AddChild(xRuneSets)
   
   for k,v in pairs(self.tData.arRuneSets) do
-    local node = xmlDoc:NewNode("set", v)
-    xRuneSets:AddChild(node)
+    local nNode = xmlDoc:NewNode("set", v)
+    xRuneSets:AddChild(nNode)
   end
 end
   
+function ProtoArmory:WriteAchievements(xmlDoc, xNode)
+  local xAchievements = xmlDoc:NewNode("achievements")
+  xNode:AddChild(xAchievements)
+  
+  -- Loop over our Achievements array and start constructing the nodes
+  -- for all entries inside the array.
+  for i = 1, #self.tData.arAchievements do
+    -- create the category node first, this will hold all achievements
+    -- groups and subgroups for it.
+    local xCategory = xmlDoc:NewNode("category", { nId = self.tData.arAchievements[i].nId, strName = self.tData.arAchievements[i].strName })
+    xAchievements:AddChild(xCategory)
+    
+    -- Now that the category has been created, we will first add all
+    -- achievements to that node.
+    for j = 1, #self.tData.arAchievements[i].arAchievements do
+      local nNode = xmlDoc:NewNode("achievement", { 
+        nId = self.tData.arAchievements[i].arAchievements[j].nId,
+        strName = self.tData.arAchievements[i].arAchievements[j].strName,
+        nPoints = self.tData.arAchievements[i].arAchievements[j].nPoints
+      })
+      xCategory:AddChild(nNode)  
+    end
+    
+    -- The next step is writing out the groups that belong to this category.
+    -- Because we do not know if there any groups, we will first count the groups.
+    if self.tData.arAchievements[i].arGroups and #self.tData.arAchievements[i].arGroups > 0 then
+      -- We know there are groups in our category, so now we need to create a node
+      -- for every group.
+      for j = 1, #self.tData.arAchievements[i].arGroups do
+        local xGroup = xmlDoc:NewNode("group", {
+          nId = self.tData.arAchievements[i].arGroups[j].nId,
+          strName = self.tData.arAchievements[i].arGroups[j].strName
+        })
+        xCategory:AddChild(xGroup)
+        
+        -- Every group also has root achievements we need to add.
+        -- So iterate over the achievements of the group node and add them to the group node
+        -- we just created.
+        for k = 1, #self.tData.arAchievements[i].arGroups[j].arAchievements do
+          local nNode = xmlDoc:NewNode("achievement", {
+            nId = self.tData.arAchievements[i].arGroups[j].arAchievements[k].nId,
+            strName = self.tData.arAchievements[i].arGroups[j].arAchievements[k].strName,
+            nPoints = self.tData.arAchievements[i].arGroups[j].arAchievements[k].nPoints
+          })
+          xGroup:AddChild(nNode)
+        end
+        
+        -- Again, each group can have SubGroups.
+        -- So repeat the entire process for the subgroups if present.
+        if #self.tData.arAchievements[i].arGroups[j].arSubGroups > 0 then
+          -- We know there are subgroups in our group, so we need to create a node for
+          -- every sub group.
+          for k = 1, #self.tData.arAchievements[i].arGroups[j].arSubGroups do
+            local xSubGroup = xmlDoc:NewNode("subgroup", {
+              nId = self.tData.arAchievements[i].arGroups[j].arSubGroups[k].nId,
+              strName = self.tData.arAchievements[i].arGroups[j].arSubGroups[k].strName
+            })
+            xGroup:AddChild(xSubGroup)
+            
+            -- Last, but not least, the achievements of the SubGroup
+            for l = 1, #self.tData.arAchievements[i].arGroups[j].arSubGroups[k].arAchievements do
+              local nNode = xmlDoc:NewNode("achievement", {
+                nId = self.tData.arAchievements[i].arGroups[j].arSubGroups[k].arAchievements[l].nId,
+                strName = self.tData.arAchievements[i].arGroups[j].arSubGroups[k].arAchievements[l].strName,
+                nPoints = self.tData.arAchievements[i].arGroups[j].arSubGroups[k].arAchievements[l].nPoints
+              })
+              xSubGroup:AddChild(nNode)
+            end
+          end
+        end
+      end    
+    end
+  end
+end
+
 function ProtoArmory:OnSave(eLevel)
 	if eLevel == GameLib.CodeEnumAddonSaveLevel.General then return end	
 	if self.tData and eLevel ~= GameLib.CodeEnumAddonSaveLevel.Character then
     return { strXml = self.strXml, tData = self.tData }		
 	end
-end
-
-function ProtoArmory:OnRestore(eLevel, tData)
-	if eLevel ~= GameLib.CodeEnumAddonSaveLevel.Account then return end
-	self.tData = tData.tData
 end
 
 function ProtoArmory:GetJabbitholeItemId(item)
