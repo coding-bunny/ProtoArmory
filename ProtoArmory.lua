@@ -396,7 +396,7 @@ function ProtoArmory:CollectEquipment()
         nId = itemEquipped:GetItemId(), 
         strQuality  = qualityIdToString[itemEquipped:GetItemQuality()],
         nItemPower = itemEquipped:GetItemPower(),
-        nItemLevel = iteminfo.nEffectiveLevel,
+        nItemLevel = itemInfo.nEffectiveLevel,
         nRequiredLevel = itemEquipped:GetPowerLevel()
       }
       
@@ -473,7 +473,10 @@ function ProtoArmory:CollectCompletedAchievements()
           strName = string.gsub(arAchievements[j]:GetName(), '"', "'"),
           nId = arAchievements[j]:GetId(),
           nPoints = arAchievements[j]:GetPoints(),
-          strCompleted = arAchievements[j]:GetDateCompleted()
+          strCompleted = arAchievements[j]:GetDateCompleted(),
+          strDescription = arAchievements[j]:GetDescription(),
+          nNeeded = arAchievements[j]:GetNumNeeded() or "n.a",
+          nCompleted = arAchievements[j]:GetNumCompleted() or "n.a"
         }
             
         table.insert(tAchievement.arAchievements, achievement)
@@ -666,7 +669,6 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
         strName = string.gsub(arAchievements[j]:GetName(), '"', "'"),
         nId = arAchievements[j]:GetId(),
         nPoints = arAchievements[j]:GetPoints(),
-        strCompleted = tostring(arAchievements[j]:GetDateCompleted()),
         strDescription = arAchievements[j]:GetDescription(),
         nNeeded = arAchievements[j]:GetNumNeeded() or "n.a",
         nCompleted = arAchievements[j]:GetNumCompleted() or "n.a"
