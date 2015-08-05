@@ -93,6 +93,15 @@ local runeIdToString =
 	[Item.CodeEnumRuneType.Omni] 				= Apollo.GetString("CRB_Omni"),
 	[Item.CodeEnumRuneType.Fusion] 				= Apollo.GetString("CRB_Fusion"),
 }
+local tradeskillTierToString =
+{
+  [CraftingLib.CodeEnumTradeskillTier.Novice] = Apollo.GetString("CRB_Tradeskill_Novice"),
+  [CraftingLib.CodeEnumTradeskillTier.Apprentice] = Apollo.GetString("CRB_Tradeskill_Apprentice"),
+  [CraftingLib.CodeEnumTradeskillTier.Journeyman] = Apollo.GetString("CRB_Tradeskill_Journeyman"),
+  [CraftingLib.CodeEnumTradeskillTier.Artisan] = Apollo.GetString("CRB_Tradeskill_Artisan"),
+  [CraftingLib.CodeEnumTradeskillTier.Expert] = Apollo.GetString("CRB_Tradeskill_Expert"),
+  [CraftingLib.CodeEnumTradeskillTier.Master] = Apollo.GetString("CRB_Tradeskill_Master")
+}
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
@@ -444,50 +453,6 @@ function ProtoArmory:CollectRuneSets()
   end
 end
 
--- Collects all the Achievements that have been obtained for the current character.
--- This does not include the achievements from the Trade skills window.
-function ProtoArmory:CollectCompletedAchievements()
-  -- Collect all the categories that exist for achievements.
-  -- This is a complete tree we will have to navigate.
-  local arTree = AchievementsLib.GetAchievementCategoryTree()
-  
-  -- Iterate over the entire tree, and let's collect the achievements per group and sub group.
-  for i = 1, #arTree do
-    local tAchievement = {} -- Create a new empty array for this category.
-    
-    -- Store the Category Information and prepare the achievement array 
-    -- as well as the group array to hold all groups of this category.
-    tAchievement.nId = arTree[i].nCategoryId
-    tAchievement.strName = arTree[i].strCategoryName
-    tAchievement.arAchievements = {}
-    
-    -- Collect the achievements for the Top Category.
-    local arAchievements = AchievementsLib.GetAchievementsForCategory(arTree[i].nCategoryId, true)    
-    
-    -- Iterate over each achievement we have found for this category.
-    for j = 1, #arAchievements do
-      -- If the achievement is complete, then store it inside the arAchievement array
-      -- of the top category.
-      if arAchievements[j]:IsComplete() then
-        local achievement = {
-          strName = string.gsub(arAchievements[j]:GetName(), '"', "'"),
-          nId = arAchievements[j]:GetId(),
-          nPoints = arAchievements[j]:GetPoints(),
-          strCompleted = arAchievements[j]:GetDateCompleted(),
-          strDescription = arAchievements[j]:GetDescription(),
-          nNeeded = arAchievements[j]:GetNumNeeded() or "n.a",
-          nCompleted = arAchievements[j]:GetNumCompleted() or "n.a"
-        }
-            
-        table.insert(tAchievement.arAchievements, achievement)
-      end
-    end   
-    
-    -- Finally store our generated achievement table in our tData object.
-    table.insert(self.tData.arAchievements, tAchievement)
-  end  
-end
-
 -- Collects all the pets available for the player and stores them inside the
 -- arPets array.
 function ProtoArmory:CollectPets()
@@ -528,7 +493,6 @@ function ProtoArmory:OnProtoArmoryOn()
   self:CollectSecondaryAttributes()
 	self:CollectEquipment()
   self:CollectRuneSets()
-  self:CollectCompletedAchievements()
   self:CollectPets()
   self:CollectMounts()
   self:GenerateXML()
@@ -551,13 +515,13 @@ function ProtoArmory:GenerateXML()
   self:WriteSecondaryAttributes(xDoc, characterNode)
   self:WriteEquipment(xDoc, characterNode)
   self:WriteRuneSets(xDoc, characterNode)
-  self:WriteCompletedAchievements(xDoc, characterNode)
   self:WriteAchievements(xDoc, characterNode)
   self:WritePets(xDoc, characterNode)
   self:WriteMounts(xDoc, characterNode)
+  self:WriteReputations(xDoc, characterNode)
+  self:WriteTradeskills(xDoc, characterNode)
   
   -- Output
-  --Print(xDoc:Serialize())
   self.strXml = "<?xml version=\"1.0\"?>\r\n"..xDoc:Serialize()
     
 end
@@ -669,41 +633,32 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
         strName = string.gsub(arAchievements[j]:GetName(), '"', "'"),
         nId = arAchievements[j]:GetId(),
         nPoints = arAchievements[j]:GetPoints(),
-        strDescription = arAchievements[j]:GetDescription(),
+        strDescription = string.gsub(arAchievements[j]:GetProgressText(), "%b<>", ""),
         nNeeded = arAchievements[j]:GetNumNeeded() or "n.a",
-        nCompleted = arAchievements[j]:GetNumCompleted() or "n.a"
+        nCompleted = arAchievements[j]:GetNumCompleted() or "n.a",
+        bCompleted = tostring(arAchievements[j]:IsComplete())
       }
+      
+      -- Set some additional values when the Achievement is complete.
+      if arAchievements[j]:IsComplete() then
+        achievement.strCompletedOn = arAchievements[j]:GetDateCompleted()
+        
+        local reward = arAchievements[j]:GetRewards()
+        
+        if reward.GetTitle ~= nil then
+          achievement.strReward = reward:GetTitle() 
+        else
+          achievement.strReward = "n.a"
+        end
+        
+        achievement.strDescription = string.gsub(arAchievements[j]:GetDescription(), "%b<>", "")
+      end
           
       -- Create the node for it using the table and add it to the category.
       local node = xmlDoc:NewNode("achievement", achievement)
       nodeCategory:AddChild(node)
     end
   end 
-end
-  
-function ProtoArmory:WriteCompletedAchievements(xmlDoc, xNode)
-  local xAchievements = xmlDoc:NewNode("completed_achievements")
-  xNode:AddChild(xAchievements)
-  
-  -- Loop over our Achievements array and start constructing the nodes
-  -- for all entries inside the array.
-  for i = 1, #self.tData.arAchievements do
-    -- create the category node first, this will hold all achievements
-    -- groups and subgroups for it.
-    local xCategory = xmlDoc:NewNode("category", { nId = self.tData.arAchievements[i].nId, strName = self.tData.arAchievements[i].strName })
-    xAchievements:AddChild(xCategory)
-    
-    -- Now that the category has been created, we will first add all
-    -- achievements to that node.
-    for j = 1, #self.tData.arAchievements[i].arAchievements do
-      local nNode = xmlDoc:NewNode("achievement", { 
-        nId = self.tData.arAchievements[i].arAchievements[j].nId,
-        strName = self.tData.arAchievements[i].arAchievements[j].strName,
-        nPoints = self.tData.arAchievements[i].arAchievements[j].nPoints
-      })
-      xCategory:AddChild(nNode)  
-    end
-  end
 end
 
 -- Writes out all the pets stored.
@@ -725,6 +680,43 @@ function ProtoArmory:WriteMounts(xmlDoc, xNode)
       local nNode = xmlDoc:NewNode("mount", self.tData.arMounts[i])
       xMounts:AddChild(nNode)
     end
+end
+
+function ProtoArmory:WriteReputations(xmlDoc, xNode)
+  local xReputations = xmlDoc:NewNode("reputations")
+  xNode:AddChild(xReputations)
+  
+  local arReputations = GameLib.GetReputationInfo()
+  
+  for i = 1, #arReputations do
+    local tReputation = {
+      strName = arReputations[i].strName,
+      strParent = arReputations[i].strParent,
+      nLevel = arReputations[i].nLevel,
+      nCurrent = arReputations[i].nCurrent
+    }
+    local node = xmlDoc:NewNode("reputation", tReputation)
+    xReputations:AddChild(node)    
+  end
+end
+
+function ProtoArmory:WriteTradeskills(xmlDoc, xNode)
+  local xTradeskills = xmlDoc:NewNode("tradeskills")
+  xNode:AddChild(xTradeskills)
+  
+  local arTradeskills = CraftingLib.GetKnownTradeskills()
+  
+  for i = 1, #arTradeskills do
+    local tInfo = CraftingLib.GetTradeskillInfo(arTradeskills[i].eId)    
+    local tTradeskill = {
+      strName = arTradeskills[i].strName,
+      strTier = tradeskillTierToString[tInfo.eTier],
+      nExp = tInfo.nXp,
+      nMaxExp = tInfo.nXpMax
+    }
+    local node = xmlDoc:NewNode("tradeskill", tTradeskill)
+    xTradeskills:AddChild(node)
+  end
 end
 
 function ProtoArmory:OnSave(eLevel)
