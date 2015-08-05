@@ -666,10 +666,10 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
         strName = string.gsub(arAchievements[j]:GetName(), '"', "'"),
         nId = arAchievements[j]:GetId(),
         nPoints = arAchievements[j]:GetPoints(),
-        strCompleted = arAchievements[j]:GetDateCompleted(),
+        strCompleted = tostring(arAchievements[j]:GetDateCompleted()),
         strDescription = arAchievements[j]:GetDescription(),
-        nNeeded = arAchievements[j]:GetNumNeeded(),
-        nCompleted = arAchievements[j]:GetNumCompleted()
+        nNeeded = arAchievements[j]:GetNumNeeded() or "n.a",
+        nCompleted = arAchievements[j]:GetNumCompleted() or "n.a"
       }
           
       -- Create the node for it using the table and add it to the category.
