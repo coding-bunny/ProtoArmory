@@ -473,66 +473,7 @@ function ProtoArmory:CollectAchievements()
             
         table.insert(tAchievement.arAchievements, achievement)
       end
-    end
-    
-    -- Now collecting the groups that actually belong to our Top Category.
-    -- We will iterate over the Categories in the tGroups table and repeat the
-    -- entire process.
-    for j = 1, #arTree[i].tGroups do
-      tAchievement.arGroups[j] = {
-        nId = arTree[i].tGroups[j].nGroupId,
-        strName = arTree[i].tGroups[j].strGroupName,
-        arSubGroups = {},
-        arAchievements = {}
-      }
-      
-      -- Collect the Achievements for this SubGroup.
-      local arGroupAchievements = AchievementsLib.GetAchievementsForCategory(arTree[i].tGroups[j].nGroupId, true)    
-    
-      -- Iterate over each achievement we have found for this Group
-      for k = 1, #arGroupAchievements do
-        -- If the achievement has been completed, then store it in the
-        -- arAchievements array of the current Group.
-        if arGroupAchievements[k]:IsComplete() then
-          local achievement = {
-            strName = arGroupAchievements[k]:GetName(),
-            nId = arGroupAchievements[k]:GetId(),
-            nPoints = arGroupAchievements[k]:GetPoints()
-          }
-            
-          table.insert(tAchievement.arGroups[j].arAchievements, achievement)
-        end
-      end
-      
-      -- And Since each Group can have SubGroups again, we will
-      -- Iterate over those and collect the Achievements for them.
-      for l = 1, #arTree[i].tGroups[j].tSubGroups do
-        tAchievement.arGroups[j].arSubGroups[l] = {
-          strName =  arTree[i].tGroups[j].tSubGroups[l].strSubGroupName,
-          nId =  arTree[i].tGroups[j].tSubGroups[l].nSubGroupId,
-          arAchievements = {}
-        }
-        
-        -- And finally collect all Achievements for the final SubGroup that
-        -- have been completed.
-        local arSubGroupAchievements = AchievementsLib.GetAchievementsForCategory(arTree[i].tGroups[j].tSubGroups[l].nSubGroupId, true)
-        
-        -- Iterate over the collection and copy over the Achievements
-        -- that have been completed by the Player.
-        for m = 1, #arSubGroupAchievements do
-          if arSubGroupAchievements[m]:IsComplete() then
-            local achievement = {
-              strName = arSubGroupAchievements[m]:GetName(),
-              nId = arSubGroupAchievements[m]:GetId(),
-              nPoints = arSubGroupAchievements[m]:GetPoints()
-            }
-            
-            -- Store the achievement in the array of our subGroup.
-            table.insert(tAchievement.arGroups[j].arSubGroups[l].arAchievements, achievement)
-          end
-        end
-      end
-    end
+    end   
     
     -- Finally store our generated achievement table in our tData object.
     table.insert(self.tData.arAchievements, tAchievement)
