@@ -653,8 +653,8 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
            
       -- Collect the reward
       local reward = arAchievements[j]:GetRewards()
-      if reward.GetTitle ~= nil then
-        achievement.strReward = reward:GetTitle() 
+      if reward and reward.strTitle then
+        achievement.strReward = reward:strTitle:GetTitle()
       else
         achievement.strReward = "n.a"
       end
