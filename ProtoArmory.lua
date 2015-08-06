@@ -215,11 +215,11 @@ function ProtoArmory:StoreCharacterAttribute(strName, strValue)
 end
 
 function ProtoArmory:StorePrimaryAttribute(strName, strValue, strTooltip)
-  table.insert(self.tData["arPrimaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue, ["strTooltip"] = strTooltip })
+  table.insert(self.tData["arPrimaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue })
 end
 
 function ProtoArmory:StoreSecondaryAttribute(strName, strValue, strTooltip)
-  table.insert(self.tData["arSecondaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue, ["strTooltip"] = strTooltip })
+  table.insert(self.tData["arSecondaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue })
 end
 -- Collects all information about the currently played Character and stores
 -- it in the self.tData.arCharacter table of the Addon.
