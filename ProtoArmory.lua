@@ -237,6 +237,7 @@ function ProtoArmory:CollectCharacterInfo()
   self:StoreCharacterAttribute("Class", classIdToString[unitPlayer:GetClassId()] or "")
   self:StoreCharacterAttribute("Path", pathIdToString[unitPlayer:GetPlayerPathType()] or "")
   self:StoreCharacterAttribute("Path Level", PlayerPathLib.GetPathLevel())
+  self:StoreCharacterAttribute("Realm", GameLib.GetRealmName())
   self:CollectGuildRank()
 end
 
@@ -400,12 +401,12 @@ function ProtoArmory:CollectEquipment()
       local itemSlot = slotsIdToString[itemEquipped:GetSlot()]
       
       self.tData.arEquippedItems[itemSlot] = {
-        strName = itemSlot, 
-        strValue  = itemEquipped:GetName(),
+        strSlot = itemSlot, 
+        strName  = itemEquipped:GetName(),
         nId = itemEquipped:GetItemId(), 
         strQuality  = qualityIdToString[itemEquipped:GetItemQuality()],
         nItemPower = itemEquipped:GetItemPower(),
-        nItemLevel = itemInfo.nEffectiveLevel,
+        nItemLevel = itemInfo.tPrimary.nEffectiveLevel,
         nRequiredLevel = itemEquipped:GetPowerLevel()
       }
       
@@ -446,10 +447,6 @@ function ProtoArmory:CollectRuneSets()
         arRuneSetsTemp[tSetInfo.strName] = tSetInfo
       end
     end
-  end
-
-  for k,v in pairs(arRuneSetsTemp) do
-    self.tData.arRuneSets[k] = { strName = v.strName, nPower = v.nPower, nMaxPower = v.nMaxPower }
   end
 end
 
@@ -573,8 +570,17 @@ function ProtoArmory:WriteEquipment(xmlDoc, xNode)
   for k,v in pairs(self.tData.arEquippedItems) do
     local itemNode = xmlDoc:NewNode("item", { itemslot = k })
     xEquipment:AddChild(itemNode)
-    
-    local propertyNode = xmlDoc:NewNode("properties", { strName = v.strName, strValue = v.strValue, strQuality = v.strQuality, nId = v.nId, nLevel = v.nLevel })
+       
+    local tAttributes = { 
+      strSlot = v.strSlot, 
+      strName  = v.strName, 
+      nId = v.nId, 
+      strQuality = v.strQuality,
+      nItemPower = v.nItemPower, 
+      nItemLevel = v.nItemLevel,
+      nRequireLevel = v.nRequiredLevel 
+    }
+    local propertyNode = xmlDoc:NewNode("properties", tAttributes)
     itemNode:AddChild(propertyNode)
     
     -- Now the runes of it.    
@@ -642,18 +648,17 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
       -- Set some additional values when the Achievement is complete.
       if arAchievements[j]:IsComplete() then
         achievement.strCompletedOn = arAchievements[j]:GetDateCompleted()
-        
-        local reward = arAchievements[j]:GetRewards()
-        
-        if reward.GetTitle ~= nil then
-          achievement.strReward = reward:GetTitle() 
-        else
-          achievement.strReward = "n.a"
-        end
-        
         achievement.strDescription = string.gsub(arAchievements[j]:GetDescription(), "%b<>", "")
       end
-          
+           
+      -- Collect the reward
+      local reward = arAchievements[j]:GetRewards()
+      if reward.GetTitle ~= nil then
+        achievement.strReward = reward:GetTitle() 
+      else
+        achievement.strReward = "n.a"
+      end
+      
       -- Create the node for it using the table and add it to the category.
       local node = xmlDoc:NewNode("achievement", achievement)
       nodeCategory:AddChild(node)
@@ -707,15 +712,21 @@ function ProtoArmory:WriteTradeskills(xmlDoc, xNode)
   local arTradeskills = CraftingLib.GetKnownTradeskills()
   
   for i = 1, #arTradeskills do
-    local tInfo = CraftingLib.GetTradeskillInfo(arTradeskills[i].eId)    
-    local tTradeskill = {
-      strName = arTradeskills[i].strName,
-      strTier = tradeskillTierToString[tInfo.eTier],
-      nExp = tInfo.nXp,
-      nMaxExp = tInfo.nXpMax
-    }
-    local node = xmlDoc:NewNode("tradeskill", tTradeskill)
-    xTradeskills:AddChild(node)
+    local tInfo = CraftingLib.GetTradeskillInfo(arTradeskills[i].eId)
+    
+    if tInfo.bIsActive then
+      local tTradeskill = {
+        strName = arTradeskills[i].strName,
+        strLevel = tradeskillTierToString[tInfo.eTier],
+        nLevel = tInfo.eTier,
+        nMaxLevel = tInfo.nTierMax,
+        nTalentPoints = tInfo.nTalentPoints,
+        nExp = tInfo.nXp,
+        nMaxExp = tInfo.nXpMax
+      }
+      local node = xmlDoc:NewNode("tradeskill", tTradeskill)
+      xTradeskills:AddChild(node)
+    end
   end
 end
 
