@@ -10,7 +10,8 @@ require "GameLib"
 require "Unit"
 require "PlayerPathLib"
 require "CraftingLib"
---require "Character"
+require "HousingLib"
+require "Residence"
  
 -----------------------------------------------------------------------------------------------
 -- ProtoArmory Module Definition
@@ -84,14 +85,14 @@ local qualityIdToString =
 }
 local runeIdToString =
 {
-	[Item.CodeEnumRuneType.Air] 				= Apollo.GetString("CRB_Air"),
-	[Item.CodeEnumRuneType.Water] 				= Apollo.GetString("CRB_Water"),
-	[Item.CodeEnumRuneType.Earth] 				= Apollo.GetString("CRB_Earth"),
-	[Item.CodeEnumRuneType.Fire] 				= Apollo.GetString("CRB_Fire"),
-	[Item.CodeEnumRuneType.Logic] 				= Apollo.GetString("CRB_Logic"),
-	[Item.CodeEnumRuneType.Life] 				= Apollo.GetString("CRB_Life"),
-	[Item.CodeEnumRuneType.Omni] 				= Apollo.GetString("CRB_Omni"),
-	[Item.CodeEnumRuneType.Fusion] 				= Apollo.GetString("CRB_Fusion"),
+	[Item.CodeEnumRuneType.Air]	= Apollo.GetString("CRB_Air"),
+	[Item.CodeEnumRuneType.Water]	= Apollo.GetString("CRB_Water"),
+	[Item.CodeEnumRuneType.Earth] = Apollo.GetString("CRB_Earth"),
+	[Item.CodeEnumRuneType.Fire] = Apollo.GetString("CRB_Fire"),
+	[Item.CodeEnumRuneType.Logic] = Apollo.GetString("CRB_Logic"),
+	[Item.CodeEnumRuneType.Life] = Apollo.GetString("CRB_Life"),
+	[Item.CodeEnumRuneType.Omni] = Apollo.GetString("CRB_Omni"),
+	[Item.CodeEnumRuneType.Fusion] = Apollo.GetString("CRB_Fusion"),
 }
 local tradeskillTierToString =
 {
@@ -101,6 +102,14 @@ local tradeskillTierToString =
   [CraftingLib.CodeEnumTradeskillTier.Artisan] = Apollo.GetString("CRB_Tradeskill_Artisan"),
   [CraftingLib.CodeEnumTradeskillTier.Expert] = Apollo.GetString("CRB_Tradeskill_Expert"),
   [CraftingLib.CodeEnumTradeskillTier.Master] = Apollo.GetString("CRB_Tradeskill_Master")
+}
+
+local guildTypeToRatingType = 
+{
+  [GuildLib.GuildType_ArenaTeam_2v2] = MatchingGame.RatingType.Arena2v2,
+  [GuildLib.GuildType_ArenaTeam_3v3] = MatchingGame.RatingType.Arena3v3,
+  [GuildLib.GuildType_ArenaTeam_5v5] = MatchingGame.RatingType.Arena5v5,
+  [GuildLib.GuildType_WarParty] = MatchingGame.RatingType.Warplot,
 }
 -----------------------------------------------------------------------------------------------
 -- Constants
@@ -126,7 +135,11 @@ function ProtoArmory:new(o)
     arRuneSets = {},
     arAchievements = {},
     arPets = {},
-    arMounts = {}
+    arMounts = {},
+    arPvP = {},
+    arAbilities = {},
+    arAMPs = {},
+    arHousing = {},
   }
   
   return o
@@ -215,11 +228,11 @@ function ProtoArmory:StoreCharacterAttribute(strName, strValue)
 end
 
 function ProtoArmory:StorePrimaryAttribute(strName, strValue, strTooltip)
-  table.insert(self.tData["arPrimaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue })
+  table.insert(self.tData["arPrimaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue, ["strTooltip"] = strTooltip })
 end
 
 function ProtoArmory:StoreSecondaryAttribute(strName, strValue, strTooltip)
-  table.insert(self.tData["arSecondaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue })
+  table.insert(self.tData["arSecondaryAttributes"], { ["strName"] = strName, ["strValue"] = strValue, ["strTooltip"] = strTooltip })
 end
 -- Collects all information about the currently played Character and stores
 -- it in the self.tData.arCharacter table of the Addon.
@@ -249,7 +262,7 @@ function ProtoArmory:CollectGuildRank()
   local arGuilds = GuildLib.GetGuilds()
   
   for i = 1, #arGuilds do
-    if arGuilds[i]:GetType() == 1 then
+    if arGuilds[i]:GetType() == GuildLib.GuildType_Guild then
       self:StoreCharacterAttribute("nGuildRank", arGuilds[i]:GetMyRank())
     end
   end
@@ -448,6 +461,10 @@ function ProtoArmory:CollectRuneSets()
       end
     end
   end
+  
+  for k,v in pairs(arRuneSetsTemp) do
+    self.tData.arRuneSets[k] = { strName = v.strName, nPower = v.nPower, nMaxPower = v.nMaxPower }
+  end
 end
 
 -- Collects all the pets available for the player and stores them inside the
@@ -482,6 +499,123 @@ function ProtoArmory:CollectMounts()
   end
 end
 
+function ProtoArmory:CollectPvP()
+  local arArenaTeams = self:Helper_CollectArenaTeams()
+  
+  for i = 1, #arArenaTeams do
+    local tRatings = arArenaTeams[i]:GetPvpRatings()
+    local tData = {
+      strName = arArenaTeams[i]:GetName(),
+      nDraws = tRatings.nDraws,
+      nLosses = tRatings.nLosses,
+      nRating = tRatings.nRating,
+      nWins = tRatings.nWins,
+      nPersonalRating = MatchingGame.GetPvpRating(guildTypeToRatingType[arArenaTeams[i]:GetType()] or 0)
+    }
+    
+    table.insert(self.tData.arPvP, tData)
+  end
+end
+
+-- Collects all active abilities on the current LAS Configuration of the player.
+-- This is done by getting the current LAS and the abilities with a nTier higher
+-- then 0, are active, and a maximum tier of 9.
+function ProtoArmory:CollectAbilities()
+  self.tData.arAbilities = {
+    nLAS = AbilityBook.GetCurrentSpec(),
+    arAbilities = {}
+  }
+  
+  local arAbilities = AbilityBook.GetAbilitiesList()
+  
+  for i = 1, #arAbilities do
+    if arAbilities[i].bIsActive and arAbilities[i].nCurrentTier > 0 and arAbilities[i].nMaxTiers == 9 then
+      local tAbility = {
+        nId = arAbilities[i].nId,
+        strName = arAbilities[i].strName,
+        nCurrentTier = arAbilities[i].nCurrentTier,
+        nSpellId = arAbilities[i].tTiers[arAbilities[i].nCurrentTier].splObject:GetId(),
+        strSpellName = arAbilities[i].tTiers[arAbilities[i].nCurrentTier].splObject:GetName()
+      }
+      
+      table.insert(self.tData.arAbilities.arAbilities, tAbility)
+    end
+  end
+end
+
+-- Collects all the AMPs that have been activated by the player.
+-- To do this we need to loop over the information for the current LAS and 
+-- load the AMP data, then select those who are activated and unlocked.
+function ProtoArmory:CollectAMPs()
+  self.tData.arAMPs = {
+    nLAS = AbilityBook.GetCurrentSpec(),
+    arAMPs = {}
+  }
+  
+  local arAMPs = AbilityBook.GetEldanAugmentationData(self.tData.arAMPs.nLAS).tAugments
+  
+  for i = 1, #arAMPs do
+    if arAMPs[i].eEldanAvailability == AbilityBook.CodeEnumEldanAvailability.Activated then
+      local tAMP = {
+        nId = arAMPs[i].nId,
+        nItemIdUnlock = arAMPs[i].nItemIdUnlock,
+        nSpellIdAugment = arAMPs[i].nSpellIdAugment,
+        strName = arAMPs[i].strTitle,
+        nPowerCost = arAMPs[i].nPowerCost
+      }
+      
+      table.insert(self.tData.arAMPs.arAMPs, tAMP)
+    end
+  end
+end
+
+-- Collects all the housing information that a player has, and stores them in a
+-- specific table structure for further usage.
+function ProtoArmory:CollectHousing()
+  local rResidence = HousingLib.GetResidence()
+  
+  self.tData.arHousing = {
+    strName = rResidence:GetPropertyName(),
+    nInternalDecor = rResidence:GetNumPlacedDecorInterior(),
+    nExternalDecor = rResidence:GetNumPlacedDecorExterior(),
+    nInternalLimit = rResidence:GetMaxPlacedDecorInterior(),
+    nExternalLimit = rResidence:GetMaxPlacedDecorExterior(),
+    nMaxOwnedDecor = rResidence:GetMaxOwnedDecor(),
+    nOwnedDecor = rResidence:GetNumOwnedDecor()    
+  }  
+end
+
+-----------------------------------------------------------------------------------------------
+-- Helpers
+-----------------------------------------------------------------------------------------------
+
+-- Collects all the PvP Teams that a player belongs to and returns them in a specific
+-- Table structure for further usage.
+function ProtoArmory:Helper_CollectArenaTeams()
+  local arArenaTeams = {}
+  local arGuilds = GuildLib.GetGuilds()
+  
+  for i = 1, #arGuilds do
+    if arGuilds[i]:GetType() == GuildLib.GuildType_ArenaTeam_2v2 then
+      table.insert(arArenaTeams, arGuilds[i])
+    end
+     
+    if arGuilds[i]:GetType() == GuildLib.GuildType_ArenaTeam_3v3 then
+      table.insert(arArenaTeams, arGuilds[i])
+    end
+    
+    if arGuilds[i]:GetType() == GuildLib.GuildType_ArenaTeam_5v5 then
+      table.insert(arArenaTeams, arGuilds[i])
+    end
+    
+    if arGuilds[i]:GetType() == GuildLib.GuildType_WarParty then
+      table.insert(arArenaTeams, arGuilds[i])
+    end
+  end
+  
+  return arArenaTeams
+end
+
 -- on SlashCommand "/armory"
 function ProtoArmory:OnProtoArmoryOn()
 	self:CollectCharacterInfo()
@@ -492,6 +626,11 @@ function ProtoArmory:OnProtoArmoryOn()
   self:CollectRuneSets()
   self:CollectPets()
   self:CollectMounts()
+  self:CollectPvP()
+  self:CollectAbilities()
+  self:CollectAMPs()
+  self:CollectHousing()
+  
   self:GenerateXML()
 	
 	--self.wndMain:Invoke() -- show the window
@@ -517,10 +656,13 @@ function ProtoArmory:GenerateXML()
   self:WriteMounts(xDoc, characterNode)
   self:WriteReputations(xDoc, characterNode)
   self:WriteTradeskills(xDoc, characterNode)
+  self:WritePvP(xDoc, characterNode)
+  self:WriteAbilities(xDoc, characterNode)
+  self:WriteAMPs(xDoc, characterNode)
+  self:WriteHousing(xDoc, characterNode)
   
   -- Output
-  self.strXml = "<?xml version=\"1.0\"?>\r\n"..xDoc:Serialize()
-    
+  self.strXml = "<?xml version=\"1.0\"?>\r\n"..xDoc:Serialize()    
 end
 
 function ProtoArmory:WriteCharacterInfo(xmlDoc, xNode)
@@ -653,8 +795,8 @@ function ProtoArmory:WriteAchievements(xmlDoc, xNode)
            
       -- Collect the reward
       local reward = arAchievements[j]:GetRewards()
-      if reward and reward.strTitle then
-        achievement.strReward = reward.strTitle:GetTitle()
+      if reward.GetTitle ~= nil then
+        achievement.strReward = reward:GetTitle() 
       else
         achievement.strReward = "n.a"
       end
@@ -728,6 +870,41 @@ function ProtoArmory:WriteTradeskills(xmlDoc, xNode)
       xTradeskills:AddChild(node)
     end
   end
+end
+
+function ProtoArmory:WritePvP(xmlDoc, xNode)
+  local xPvP = xmlDoc:NewNode("pvp")
+  xNode:AddChild(xPvP)
+  
+  for i = 1, #self.tData.arPvP do
+    local node = xmlDoc:NewNode("group", self.tData.arPvP[i])
+    xPvP:AddChild(node)
+  end
+end
+
+function ProtoArmory:WriteAbilities(xmlDoc, xNode)
+  local xAbilities = xmlDoc:NewNode("abilities", { nActiveLas = self.tData.arAbilities.nLAS })
+  xNode:AddChild(xAbilities)
+  
+  for i = 1, #self.tData.arAbilities.arAbilities do
+    local node = xmlDoc:NewNode("ability", self.tData.arAbilities.arAbilities[i])
+    xAbilities:AddChild(node)
+  end
+end
+
+function ProtoArmory:WriteAMPs(xmlDoc, xNode)
+  local xAMPs = xmlDoc:NewNode("amps", { nActiveLas = self.tData.arAMPs.nLAS })
+  xNode:AddChild(xAMPs)
+  
+  for i = 1, #self.tData.arAMPs.arAMPs do
+    local node = xmlDoc:NewNode("amp", self.tData.arAMPs.arAMPs[i])
+    xAMPs:AddChild(node)
+  end
+end
+
+function ProtoArmory:WriteHousing(xmlDoc, xNode)
+  local xHousing = xmlDoc:NewNode("housing", self.tData.arHousing)
+  xNode:AddChild(xHousing)
 end
 
 function ProtoArmory:OnSave(eLevel)
