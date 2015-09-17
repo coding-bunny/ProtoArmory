@@ -12,90 +12,80 @@ require "PlayerPathLib"
 require "CraftingLib"
 require "HousingLib"
 require "Residence"
+require "CollectiblesLib"
  
 -----------------------------------------------------------------------------------------------
 -- ProtoArmory Module Definition
 -----------------------------------------------------------------------------------------------
 local ProtoArmory = {}
 local XmlDocument = {}
-local eProperty = {"Brutality", "Finesse", "Moxie", "Tech", "Insight", "Grit"}
-local classIdToString =
-{
-	[GameLib.CodeEnumClass.Warrior] 		= Apollo.GetString("ClassWarrior"),
-	[GameLib.CodeEnumClass.Engineer] 		= Apollo.GetString("ClassEngineer"),
-	[GameLib.CodeEnumClass.Esper] 			= Apollo.GetString("ClassESPER"),
-	[GameLib.CodeEnumClass.Medic] 			= Apollo.GetString("ClassMedic"),
-	[GameLib.CodeEnumClass.Stalker] 		= Apollo.GetString("ClassStalker"),
-	[GameLib.CodeEnumClass.Spellslinger] 		= Apollo.GetString("ClassSpellslinger"),
+local classIdToString = {
+  [GameLib.CodeEnumClass.Warrior] = Apollo.GetString("ClassWarrior"),
+	[GameLib.CodeEnumClass.Engineer] = Apollo.GetString("ClassEngineer"),
+	[GameLib.CodeEnumClass.Esper] = Apollo.GetString("ClassESPER"),
+	[GameLib.CodeEnumClass.Medic] = Apollo.GetString("ClassMedic"),
+	[GameLib.CodeEnumClass.Stalker] = Apollo.GetString("ClassStalker"),
+	[GameLib.CodeEnumClass.Spellslinger] = Apollo.GetString("ClassSpellslinger"),
 }
-local pathIdToString =
-{
-  	[PlayerPathLib.PlayerPathType_Soldier]    = Apollo.GetString("PlayerPathSoldier"),
- 	[PlayerPathLib.PlayerPathType_Settler]    = Apollo.GetString("PlayerPathSettler"),
- 	[PlayerPathLib.PlayerPathType_Scientist]  = Apollo.GetString("PlayerPathScientist"),
- 	[PlayerPathLib.PlayerPathType_Explorer]   = Apollo.GetString("PlayerPathExplorer"),
+local pathIdToString = {
+  [PlayerPathLib.PlayerPathType_Soldier] = Apollo.GetString("PlayerPathSoldier"),
+ 	[PlayerPathLib.PlayerPathType_Settler] = Apollo.GetString("PlayerPathSettler"),
+ 	[PlayerPathLib.PlayerPathType_Scientist] = Apollo.GetString("PlayerPathScientist"),
+ 	[PlayerPathLib.PlayerPathType_Explorer] = Apollo.GetString("PlayerPathExplorer"),
 }
-local factionIdToString =
-{
-	[Unit.CodeEnumFaction.ExilesPlayer] 	= Apollo.GetString("CRB_Exile"),
-	[Unit.CodeEnumFaction.DominionPlayer] 	= Apollo.GetString("CRB_Dominion"),
+local factionIdToString = {
+	[Unit.CodeEnumFaction.ExilesPlayer] = Apollo.GetString("CRB_Exile"),
+	[Unit.CodeEnumFaction.DominionPlayer] = Apollo.GetString("CRB_Dominion"),
 }
-local raceIdToString =
-{
-	[GameLib.CodeEnumRace.Human] 	= Apollo.GetString("RaceHuman"),
-	[GameLib.CodeEnumRace.Granok] 	= Apollo.GetString("RaceGranok"),
-	[GameLib.CodeEnumRace.Aurin] 	= Apollo.GetString("RaceAurin"),
-	[GameLib.CodeEnumRace.Draken] 	= Apollo.GetString("RaceDraken"),
-	[GameLib.CodeEnumRace.Mechari] 	= Apollo.GetString("RaceMechari"),
-	[GameLib.CodeEnumRace.Chua] 	= Apollo.GetString("RaceChua"),
-	[GameLib.CodeEnumRace.Mordesh] 	= Apollo.GetString("CRB_Mordesh"),
+local raceIdToString = {
+	[GameLib.CodeEnumRace.Human] = Apollo.GetString("RaceHuman"),
+	[GameLib.CodeEnumRace.Granok] = Apollo.GetString("RaceGranok"),
+	[GameLib.CodeEnumRace.Aurin] = Apollo.GetString("RaceAurin"),
+	[GameLib.CodeEnumRace.Draken] = Apollo.GetString("RaceDraken"),
+	[GameLib.CodeEnumRace.Mechari] = Apollo.GetString("RaceMechari"),
+	[GameLib.CodeEnumRace.Chua] = Apollo.GetString("RaceChua"),
+	[GameLib.CodeEnumRace.Mordesh] = Apollo.GetString("CRB_Mordesh"),
 }
-local genderIdToString =
-{
-	[Unit.CodeEnumGender.Male]		= Apollo.GetString("CRB_Male"),
-	[Unit.CodeEnumGender.Female]		= Apollo.GetString("CRB_Female"),
-	[Unit.CodeEnumGender.Uni]		= "Uni"
+local genderIdToString = {
+	[Unit.CodeEnumGender.Male]	= Apollo.GetString("CRB_Male"),
+	[Unit.CodeEnumGender.Female]	= Apollo.GetString("CRB_Female"),
+	[Unit.CodeEnumGender.Uni]	= Apollo.GetString("CRB_Unknown")
 }
-local slotsIdToString = -- each one has the slot name and then the corresponding UI window
-{
-	[GameLib.CodeEnumEquippedItems.Chest] 				= Apollo.GetString("InventorySlot_Chest"),
-	[GameLib.CodeEnumEquippedItems.Legs] 				= Apollo.GetString("InventorySlot_Legs"),
-	[GameLib.CodeEnumEquippedItems.Head] 				= Apollo.GetString("InventorySlot_Head"),
-	[GameLib.CodeEnumEquippedItems.Shoulder] 			= Apollo.GetString("InventorySlot_Shoulder"),
-	[GameLib.CodeEnumEquippedItems.Feet] 				= Apollo.GetString("InventorySlot_Feet"),
-	[GameLib.CodeEnumEquippedItems.Hands] 				= Apollo.GetString("InventorySlot_Hands"),
-	[GameLib.CodeEnumEquippedItems.WeaponTool]			= "Tool",
-	[GameLib.CodeEnumEquippedItems.WeaponAttachment]		= "Weapon Attachment",
-	[GameLib.CodeEnumEquippedItems.System]				= "Support System",
-	[GameLib.CodeEnumEquippedItems.Augment]				= Apollo.GetString("InventorySlot_Augment"),
-	[GameLib.CodeEnumEquippedItems.Implant]				= "Implant",
-	[GameLib.CodeEnumEquippedItems.Gadget]				= Apollo.GetString("InventorySlot_Gadget"),
-	[GameLib.CodeEnumEquippedItems.Shields]				= Apollo.GetString("InventorySlot_Shields"),
-	[GameLib.CodeEnumEquippedItems.WeaponPrimary] 			= Apollo.GetString("InventorySlot_WeaponPrimary")
+local slotsIdToString = {
+	[GameLib.CodeEnumEquippedItems.Chest] = Apollo.GetString("InventorySlot_Chest"),
+	[GameLib.CodeEnumEquippedItems.Legs] = Apollo.GetString("InventorySlot_Legs"),
+	[GameLib.CodeEnumEquippedItems.Head] = Apollo.GetString("InventorySlot_Head"),
+	[GameLib.CodeEnumEquippedItems.Shoulder] = Apollo.GetString("InventorySlot_Shoulder"),
+	[GameLib.CodeEnumEquippedItems.Feet] = Apollo.GetString("InventorySlot_Feet"),
+	[GameLib.CodeEnumEquippedItems.Hands] = Apollo.GetString("InventorySlot_Hands"),
+	[GameLib.CodeEnumEquippedItems.WeaponTool]	= Apollo.GetString("CRB_Tool"),
+	[GameLib.CodeEnumEquippedItems.WeaponAttachment]	= "Weapon Attachment",
+	[GameLib.CodeEnumEquippedItems.System] = "Support System",
+	[GameLib.CodeEnumEquippedItems.Augment]	= Apollo.GetString("InventorySlot_Augment"),
+	[GameLib.CodeEnumEquippedItems.Implant]	= "Implant",
+	[GameLib.CodeEnumEquippedItems.Gadget] = Apollo.GetString("InventorySlot_Gadget"),
+	[GameLib.CodeEnumEquippedItems.Shields]	= Apollo.GetString("InventorySlot_Shields"),
+	[GameLib.CodeEnumEquippedItems.WeaponPrimary]	= Apollo.GetString("InventorySlot_WeaponPrimary")
 }
-local qualityIdToString =
-{
-	[Item.CodeEnumItemQuality.Inferior]			= Apollo.GetString("CRB_Inferior"),
-	[Item.CodeEnumItemQuality.Average]			= Apollo.GetString("CRB_Average"),
-	[Item.CodeEnumItemQuality.Good]				= Apollo.GetString("CRB_Good"),
-	[Item.CodeEnumItemQuality.Excellent]			= Apollo.GetString("CRB_Excellent"),
-	[Item.CodeEnumItemQuality.Superb]			= Apollo.GetString("CRB_Superb"),
-	[Item.CodeEnumItemQuality.Legendary]			= Apollo.GetString("CRB_Legendary"),
-	[Item.CodeEnumItemQuality.Artifact]			= Apollo.GetString("CRB_Artifact")
+local qualityIdToString = {
+	[Item.CodeEnumItemQuality.Inferior]	= Apollo.GetString("CRB_Inferior"),
+	[Item.CodeEnumItemQuality.Average]	= Apollo.GetString("CRB_Average"),
+	[Item.CodeEnumItemQuality.Good]	= Apollo.GetString("CRB_Good"),
+	[Item.CodeEnumItemQuality.Excellent] = Apollo.GetString("CRB_Excellent"),
+	[Item.CodeEnumItemQuality.Superb]	= Apollo.GetString("CRB_Superb"),
+	[Item.CodeEnumItemQuality.Legendary] = Apollo.GetString("CRB_Legendary"),
+	[Item.CodeEnumItemQuality.Artifact] = Apollo.GetString("CRB_Artifact")
 }
-local runeIdToString =
-{
+local runeIdToString = {
 	[Item.CodeEnumRuneType.Air]	= Apollo.GetString("CRB_Air"),
 	[Item.CodeEnumRuneType.Water]	= Apollo.GetString("CRB_Water"),
 	[Item.CodeEnumRuneType.Earth] = Apollo.GetString("CRB_Earth"),
 	[Item.CodeEnumRuneType.Fire] = Apollo.GetString("CRB_Fire"),
 	[Item.CodeEnumRuneType.Logic] = Apollo.GetString("CRB_Logic"),
 	[Item.CodeEnumRuneType.Life] = Apollo.GetString("CRB_Life"),
-	[Item.CodeEnumRuneType.Omni] = Apollo.GetString("CRB_Omni"),
 	[Item.CodeEnumRuneType.Fusion] = Apollo.GetString("CRB_Fusion"),
 }
-local tradeskillTierToString =
-{
+local tradeskillTierToString = {
   [CraftingLib.CodeEnumTradeskillTier.Novice] = Apollo.GetString("CRB_Tradeskill_Novice"),
   [CraftingLib.CodeEnumTradeskillTier.Apprentice] = Apollo.GetString("CRB_Tradeskill_Apprentice"),
   [CraftingLib.CodeEnumTradeskillTier.Journeyman] = Apollo.GetString("CRB_Tradeskill_Journeyman"),
@@ -103,19 +93,13 @@ local tradeskillTierToString =
   [CraftingLib.CodeEnumTradeskillTier.Expert] = Apollo.GetString("CRB_Tradeskill_Expert"),
   [CraftingLib.CodeEnumTradeskillTier.Master] = Apollo.GetString("CRB_Tradeskill_Master")
 }
-
-local guildTypeToRatingType = 
-{
+local guildTypeToRatingType = {
   [GuildLib.GuildType_ArenaTeam_2v2] = MatchingGame.RatingType.Arena2v2,
   [GuildLib.GuildType_ArenaTeam_3v3] = MatchingGame.RatingType.Arena3v3,
   [GuildLib.GuildType_ArenaTeam_5v5] = MatchingGame.RatingType.Arena5v5,
   [GuildLib.GuildType_WarParty] = MatchingGame.RatingType.Warplot,
 }
------------------------------------------------------------------------------------------------
--- Constants
------------------------------------------------------------------------------------------------
--- e.g. local kiExampleVariableMax = 999
- 
+
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
@@ -146,32 +130,23 @@ function ProtoArmory:new(o)
 end
 
 function ProtoArmory:Init()
-	local bHasConfigureFunction = false
-	local strConfigureButtonText = ""
-	local tDependencies = {
-		-- "UnitOrPackageName",
-	}
-    Apollo.RegisterAddon(self, bHasConfigureFunction, strConfigureButtonText, tDependencies)
+  local bHasConfigureFunction = false
+  local strConfigureButtonText = ""
+  local tDependencies = {
+  	-- "UnitOrPackageName",
+  }
+  Apollo.RegisterAddon(self, bHasConfigureFunction, strConfigureButtonText, tDependencies)
 end
  
 function ProtoArmory:OnDependencyError(strDep, strError)
-	-- if you don't care about this dependency, return true.
-	-- if you return false, or don't define this function
-	-- any Addons/Packages that list you as a dependency
-	-- will also receive a dependency error
-
-	--if strDep == "MountCustomization" or strDep == "Reputation" then
-	   return true
-	--end
-
-	--return false
+  return true
 end
 
 -----------------------------------------------------------------------------------------------
 -- ProtoArmory OnLoad
 -----------------------------------------------------------------------------------------------
 function ProtoArmory:OnLoad()
-    -- load our form file
+  -- load our form file
 	self.xmlDoc = XmlDoc.CreateFromFile("ProtoArmory.xml")
 	self.xmlDoc:RegisterCallback("OnDocLoaded", self)
 end
@@ -180,15 +155,15 @@ end
 -- ProtoArmory OnDocLoaded
 -----------------------------------------------------------------------------------------------
 function ProtoArmory:OnDocLoaded()
-
-	if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
-	    self.wndMain = Apollo.LoadForm(self.xmlDoc, "ProtoArmoryForm", nil, self)
+  if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
+    self.wndMain = Apollo.LoadForm(self.xmlDoc, "ProtoArmoryForm", nil, self)
+		
 		if self.wndMain == nil then
 			Apollo.AddAddonErrorText(self, "Could not load the main window for some reason.")
 			return
 		end
 		
-	    self.wndMain:Show(false, true)
+	  self.wndMain:Show(false, true)
 
 		-- if the xmlDoc is no longer needed, you should set it to nil
 		-- self.xmlDoc = nil
@@ -212,9 +187,8 @@ end
 -----------------------------------------------------------------------------------------------
 -- Define general functions here
 function	ProtoArmory:InitUI()
-	if not DoneUI then
-		self.wndCharFrame_Armory = Apollo.LoadForm(self.xmlDoc, "CharFrame_Armory", self.wndChar, self)
-		
+  if not DoneUI then
+		self.wndCharFrame_Armory = Apollo.LoadForm(self.xmlDoc, "CharFrame_Armory", self.wndChar, self)		
 		self.wndArmoryCheckBtn = self.wndCharFrame_Armory:FindChild("SelectSetWindowToggle")
 		self.wndArmorySelectionList = self.wndCharFrame_Armory:FindChild("ArmoryBtnHolder")
 		self.wndArmoryCheckBtn:AttachWindow(self.wndArmorySelectionList)
@@ -271,14 +245,18 @@ end
 -- Collects all properties of the character and stores the ones we're interested about
 -- in the self.tData.arProperties table of the Addon.
 function ProtoArmory:CollectProperties()
-  local unitPlayer = GameLib:GetPlayerUnit()
+  local unitPlayer = GameLib.GetPlayerUnit()
   local arProperties = unitPlayer:GetUnitProperties()
   
   for i, v in pairs(arProperties) do
-    for n = 1, 6 do
-      if v["strDisplayName"] == eProperty[n] then
-        table.insert(self.tData["arProperties"], { strName = v["strDisplayName"], nValue = v["fValue"] })
-      end
+    if v["strDisplayName"] and v["strDisplayName"] ~= "" then
+      table.insert(
+        self.tData.arProperties,
+        {
+          strName = v["strDisplayName"],
+          nValue = v["fValue"] 
+        }
+      )
     end
   end
 end
@@ -294,112 +272,401 @@ function ProtoArmory:CollectPrimaryAttributes()
   self:StorePrimaryAttribute(Apollo.GetString("AttributeAssaultPower"), math.floor(unitPlayer:GetAssaultPower() + .5 or 0), Apollo.GetString("Character_AssaultTooltip"))
   self:StorePrimaryAttribute(Apollo.GetString("AttributeSupportPower"), math.floor(unitPlayer:GetSupportPower() + .5 or 0), Apollo.GetString("Character_SupportTooltip"))
   self:StorePrimaryAttribute(Apollo.GetString("CRB_Armor"), math.floor(arProperties and arProperties.Armor and (arProperties.Armor.fValue + .5) or 0), Apollo.GetString("Character_ArmorTooltip"))
+  self:StorePrimaryAttribute(Apollo.GetString("Character_AvgItemLevel"), unitPlayer:GetEffectiveItemLevel() or 0, Apollo.GetString("Character_AvgItemLevelTooltip"))
 end
 
 -- Collects all secondary attributes of the currently played character and stores them
 -- in the self.tData.arSecondaryProperties table of the Addon.
 function ProtoArmory:CollectSecondaryAttributes()
   local unitPlayer = GameLib.GetPlayerUnit()
+  
+  -- Strikethrough
+  local nStrikethrough = unitPlayer:GetStrikethroughChance().nAmount
+  local nStrikethroughRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidReduce).fValue
+  local nBaseAvoidanceChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidReduceChance).fValue * 100
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseAvoidReduceChance),
+    self:WritePercentageString(nStrikethrough),
+    String_GetWeaselString(
+      Apollo.GetString("Character_StrikethroughTooltip"),
+      Apollo.FormatNumber(nStrikethroughRating, 2, true),
+      Apollo.FormatNumber(nStrikethrough - nStrikethroughRating, 2, true),
+      Apollo.FormatNumber(nBaseAvoidanceChance, 2, true)
+    )
+  )
+  
+  -- Crit Chance
+  local nCritChance = unitPlayer:GetCritChance().nAmount 
+  local nCritSeverityIncrease = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_CritChanceIncrease).fValue
+  local nCritChanceBase = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCritChance).fValue * 100
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseCritChance),
+    self:WritePercentageString(nCritChance),
+    String_GetWeaselString(
+      Apollo.GetString("Character_CritTooltip"),
+      Apollo.FormatNumber(nCritSeverityIncrease, 2, true),
+      Apollo.FormatNumber(nCritChance - nCritChanceBase, 2, true),
+      Apollo.FormatNumber(nCritChanceBase, 2, true)
+    )
+  )  
+  
+  -- Crit Severity
+  local nCritSeverity = unitPlayer:GetCritSeverity().nAmount
+  local nCritSeverityRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCritSeverityIncrease).fValue
+  local nCritSeverityMultiplier = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.CriticalHitSeverityMultiplier).fValue * 100
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.CriticalHitSeverityMultiplier),
+    self:WritePercentageString(nCritSeverity),
+    String_GetWeaselString(
+      Apollo.GetString("Character_CritSevTooltip"), 
+      Apollo.FormatNumber(nCritSeverityRating, 2, true),
+      Apollo.FormatNumber(nCritSeverity - nCritSeverityMultiplier, 2, true),
+      Apollo.FormatNumber(nCritSeverityMultiplier, 2, true)
+    )
+  )
+  
+  -- Multi Hit Chance
+  local nMultiHitChance = unitPlayer:GetMultiHitChance().nAmount
+  local nRatingMultiHitChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingMultiHitChance).fValue * 100
+  local nBaseMultiHitChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseMultiHitChance).fValue * 100
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseMultiHitChance),
+    self:WritePercentageString(nMultiHitChance),
+    String_GetWeaselString(
+      Apollo.GetString("Character_MultiHitChanceTooltip"),
+      Apollo.FormatNumber(nRatingMultiHitChance, 2, true),
+      Apollo.FormatNumber(nMultiHitChance - nBaseMultiHitChance, 2, true),
+      Apollo.FormatNumber(nBaseMultiHitChance, 2, true)
+    )
+  )
+  
+  -- Multi Hit Severity
+  local nMultiHitSeverity = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingMultiHitAmount).fValue
+  local nMultiHitAmount = unitPlayer:GetMultiHitAmount().nAmount
+  local nMultiHitBaseAmount = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseMultiHitAmount).fValue * 100
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseMultiHitAmount),
+    self:WritePercentageString(nMultiHitAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_MultiHitSeverityTooltip"),
+      Apollo.FormatNumber(nMultiHitSeverity, 2, true),
+      Apollo.FormatNumber(nMultiHitAmount - nMultiHitBaseAmount, 2, true), 
+      Apollo.FormatNumber(nMultiHitBaseAmount, 2, true)
+    )
+  )
+  
+  -- Vigor
+  local nVigor = unitPlayer:GetVigor().nAmount
+  local nVigorRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingVigor).fValue
+  local nBaseVigor = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseVigor).fValue * 100  
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseVigor),
+    self:WritePercentageString(nVigor),
+    String_GetWeaselString(
+      Apollo.GetString("Character_VigorTooltip"),
+      Apollo.FormatNumber(nVigorRating, 2, true),
+      Apollo.FormatNumber(nVigor - nBaseVigor, 2, true),
+      Apollo.FormatNumber(nBaseVigor, 2, true)
+    )
+  )
+  
+  -- Armor Pierce
+  local nArmorPenetration = unitPlayer:GetArmorPierce().nAmount
+  local nArmorPenetrationRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingArmorPierce).fValue
+  local nArmorPenetrationBase = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.IgnoreArmorBase).fValue * 100
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.IgnoreArmorBase),
+    self:WritePercentageString(nArmorPenetration),
+    String_GetWeaselString(
+      Apollo.GetString("Character_ArmorPenTooltip"),
+      Apollo.FormatNumber(nArmorPenetrationRating, 2, true),
+      Apollo.FormatNumber(nArmorPenetration - nArmorPenetrationBase, 2, true),
+      Apollo.FormatNumber(nArmorPenetrationBase, 2, true)
+    )
+  )
+  
+  -- Physical Mitigation
+  local nPhysicalMitigation = unitPlayer:GetPhysicalMitigation().nAmount
+  local nPhysicalMitigationRating = unitPlayer:GetPhysicalMitigationRating()
+  local nArmor = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue
+  local nPhysicalMitigationOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetPhysical).fValue
+  local nPhysicalMitigationPctOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue
+  local nResistPhysical = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistPhysical).fValue
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.DamageMitigationPctOffsetPhysical),
+    self:WritePercentageString(nPhysicalMitigation),
+    String_GetWeaselString(
+      Apollo.GetString("Character_PhysMitTooltip"),
+      Apollo.FormatNumber(nPhysicalMitigationRating + nArmor, 2, true), 
+      Apollo.FormatNumber(nPhysicalMitigation - ((nPhysicalMitigationOffset + nPhysicalMitigationPctOffset) * 100), 2, true), 
+      Apollo.FormatNumber(nResistPhysical, 2, true),
+      Apollo.FormatNumber(nArmor, 2, true), 
+      Apollo.FormatNumber((nPhysicalMitigationOffset + nPhysicalMitigationPctOffset) * 100, 2, true)
+    )
+  )
 
+  -- Technology Mitigation
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_StrikethroughLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetStrikethroughChance() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_StrikethroughTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidReduce).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech),
+    self:WritePercentageString(unitPlayer:GetTechMitigation().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_TechMitTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetTechMitigationRating() + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetTechMitigation().nAmount - ((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100), 2, true),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistTech).fValue, 2, true),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true), 
+      Apollo.FormatNumber((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100, 2, true))
   )
+
+  -- Magic Mitigation
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_CritChanceLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetCritChance() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_CritTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_CritChanceIncrease).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic),
+    self:WritePercentageString(unitPlayer:GetMagicMitigation().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_MagicMitTooltip"), 
+      Apollo.FormatNumber(unitPlayer:GetMagicMitigationRating() + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetMagicMitigation().nAmount - ((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100), 2, true),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistMagic).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true),
+      Apollo.FormatNumber((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100, 2, true)
+    )
   )
+  
+  -- Glance Mitigation
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_CritSeverityLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetCritSeverity() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_CritSevTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCritSeverityIncrease).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseGlanceAmount),
+    self:WritePercentageString(unitPlayer:GetGlanceAmount().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_GlanceSeverityTooltip"), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingGlanceAmount).fValue, 2, true),
+      Apollo.FormatNumber(unitPlayer:GetGlanceAmount().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceAmount).fValue  * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceAmount).fValue * 100, 2, true)
+    )
   )
+  
+  -- Glance Chance
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ArmorPenLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetIgnoreArmorBase() + 0.000005) * 10000) / 100, 2, true)),
-    Apollo.GetString("Character_ArmorPenTooltip")
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseGlanceChance),
+    self:WritePercentageString(unitPlayer:GetGlanceChance().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_GlanceChanceTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingGlanceChance).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetGlanceChance().nAmount -(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceChance).fValue * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceChance).fValue * 100, 2, true)
+    )
   )
+
+  -- Critical Mitigation
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ShieldPenLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetIgnoreShieldBase() + 0.000005) * 10000) / 100, 2, true)),
-    Apollo.GetString("Character_ShieldPenTooltip")
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseCriticalMitigation),
+    self:WritePercentageString(unitPlayer:GetCriticalMitigation().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_CritMitigationTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCriticalMitigation).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetCriticalMitigation().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCriticalMitigation).fValue * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCriticalMitigation).fValue * 100, 2, true)
+    )
   )
+ 
+  -- Deflect Chance
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_LifestealLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetBaseLifesteal() + 0.000005) * 10000) / 100, 2, true)),
-    Apollo.GetString("Character_LifestealTooltip")
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseAvoidChance),
+    self:WritePercentageString(unitPlayer:GetDeflectChance().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_DeflectTooltip"), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidIncrease).fValue, 2, true),
+      Apollo.FormatNumber(unitPlayer:GetDeflectChance().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidChance).fValue * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidChance).fValue * 100, 2, true)
+    )
   )
+  
+  -- Deflect Critical Hit Chance
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_HasteLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(-1 * math.floor((unitPlayer:GetCooldownReductionModifier() + 0.000005 - 1) * 10000) / 100, 2, true)),
-    Apollo.GetString("Character_HasteTooltip")
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseAvoidCritChance),
+    self:WritePercentageString(unitPlayer:GetDeflectCritChance().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_CritDeflectTooltip"), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_CritChanceDecrease).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetDeflectCritChance().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidCritChance).fValue * 100), 2, true),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidCritChance).fValue * 100, 2, true)
+    )
   )
+  
+  -- Shield Mitigation
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ShieldRegenPercentLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetShieldRegenPct() + 0.000005) * 10000) / 100, 2, true)),
+    Item.GetPropertyName(Unit.CodeEnumProperties.ShieldMitigationMax),
+    self:WritePercentageString(unitPlayer:GetShieldMitigationPct()),
+    Apollo.GetString("Character_ShieldMitigation_Tooltip")
+  )
+  
+  -- Shield Regen Rate
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.ShieldRegenPct),
+    self:WritePercentageString(unitPlayer:GetShieldRegenPct()),
     Apollo.GetString("Character_ShieldRegenPercentTooltip")
   )
+
+  -- Shield Reboot Time
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ShieldRebootLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_SecondsLabel"), Apollo.FormatNumber(unitPlayer:GetShieldRebootTime() / 1000, 2, true)),
+    Item.GetPropertyName(Unit.CodeEnumProperties.ShieldRebootTime),
+    self:WritePercentageString(unitPlayer:GetShieldRebootTime()),
     Apollo.GetString("Character_ShieldRebootTooltip")
   )
+
+  -- Shield Tick Time
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_PhysicalMitLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetPhysicalMitigation() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_PhysMitTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistPhysical).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.ShieldTickTime),
+    self:WritePercentageString(unitPlayer:GetShieldTickTime()),
+    Apollo.GetString("Character_ShieldTickTime_Tooltip")
   )
+  
+  -- Cooldown Reduction
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_TechMitLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetTechMitigation() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_TechMitTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistTech).fValue))
+    Item.GetPropertyName(Unit.CodeEnumProperties.CooldownReductionModifier),
+    self:WritePercentageString(unitPlayer:GetCooldownReductionModifier()),
+    Apollo.GetString("Character_HasteTooltip")
   )
+
+  -- CC Duration
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_MagicMitLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetMagicMitigation() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_MagicMitTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistMagic).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.CCDurationModifier),
+    self:WritePercentageString(unitPlayer:GetCCDurationModifier().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_CCDurationTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCCResilience).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetCCDurationModifier().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.CCDurationModifier).fValue * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.CCDurationModifier).fValue * 100, 2, true)
+    )
   )
+  
+  -- Lifesteal
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_DeflectLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetDeflectChance() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_DeflectTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidIncrease).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseLifesteal),
+    self:WritePercentageString(unitPlayer:GetLifesteal().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_LifestealTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingLifesteal).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetLifesteal().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseLifesteal).fValue * 100), 2, true),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseLifesteal).fValue * 100, 2, true)
+    )
   )
+  
+  -- Focus Pool
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_DeflectCritLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetDeflectCritChance() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_CritDeflectTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_CritChanceDecrease).fValue, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseFocusPool),
+    Apollo.FormatNumber(unitPlayer:GetMaxFocus(), 0, true),
+    Apollo.GetString("Character_FocusPool")
   )
+  
+  -- Focus Recovery Rate
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ResilianceLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((math.abs(unitPlayer:GetCCDurationModifier() -1) + 0.000005) * 10000) / 100, 2, true)),
-    Apollo.GetString("Character_ResilianceTooltip")
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseFocusRecoveryInCombat),
+    Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingFocusRecovery).fValue, 2, true),
+    String_GetWeaselString(
+      Apollo.GetString("Character_ManaRecoveryTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingFocusRecovery).fValue, 2, true),
+      Apollo.FormatNumber(unitPlayer:GetFocusRegenInCombat().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseFocusRecoveryInCombat).fValue * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseFocusRecoveryInCombat).fValue * 100, 2, true)
+    )
   )
+  
+  -- Focus Cost Reduction
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ManaRecoveryLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PerSecLabel"), Apollo.FormatNumber(unitPlayer:GetManaRegenInCombat() * 2, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_ManaRecoveryTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ManaPerFiveSeconds).fValue, 2, true))
-  )
-  self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_ManaCostRedLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((math.abs(unitPlayer:GetManaCostModifier() -1) + 0.000005) * 10000) / 100, 2, true)),
+    Item.GetPropertyName(Unit.CodeEnumProperties.FocusCostModifier),
+    self:WritePercentageString(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.FocusCostModifier).fValue * 100),
     Apollo.GetString("Character_ManaCostRedTooltip")
   )
+  
+  -- Reflect Chance
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_PvPOffenseLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetPvPDamageI() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_PvPOffenseTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPOffensiveRating).fValue, 2, true), Apollo.FormatNumber(math.floor((unitPlayer:GetPvPDamageO() + 0.000005) * 10000) / 100, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseDamageReflectChance),
+    self:WritePercentageString(unitPlayer:GetDamageReflectChance().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_ReflectChanceTooltip"),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingDamageReflectChance).fValue, 2, true),
+      Apollo.FormatNumber(unitPlayer:GetDamageReflectChance().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseDamageReflectChance).fValue * 100), 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseDamageReflectChance).fValue * 100, 2, true)
+    )
   )
+  
+  -- Reflect Damage
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseDamageReflectAmount),
+    self:WritePercentageString(unitPlayer:GetDamageReflectAmount().nAmount),
+    String_GetWeaselString(
+      Apollo.GetString("Character_ReflectSeverityTooltip"), 
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingDamageReflectAmount).fValue, 2, true), 
+      Apollo.FormatNumber(unitPlayer:GetDamageReflectAmount().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseDamageReflectAmount).fValue * 100), 2, true),
+      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseDamageReflectAmount).fValue * 100, 2, true)
+    )
+  )
+  
+  -- Intensity
+  local nIntensity = unitPlayer:GetIntensity().nAmount
+  local nBaseIntensity = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseIntensity).fValue * 100
+  local nIntensityRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingIntensity).fValue
+  
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.BaseIntensity),
+    self:WritePercentageString(nIntensity),
+    String_GetWeaselString(
+      Apollo.GetString("Character_IntensityTooltip"), 
+      Apollo.FormatNumber(nIntensityRating, 2, true), 
+      Apollo.FormatNumber(nIntensity - nBaseIntensity, 2, true), 
+      Apollo.FormatNumber(nBaseIntensity, 2, true)
+    )
+  )
+  
+  -- PvP Power
+  local nPvPDamageO = unitPlayer:GetPvPDamageO()
+  local nPvPDamageI = unitPlayer:GetPvPDamageI()
+  local nPvPOffensiveRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPOffensiveRating).fValue
+  local nPvPOffensePctOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPOffensePctOffset).fValue * 100
+  
+  self:StoreSecondaryAttribute(
+    Item.GetPropertyName(Unit.CodeEnumProperties.PvPOffensePctOffset),
+    self:WritePercentageString(nPvPDamageI),
+    String_GetWeaselString(
+      Apollo.GetString("Character_PvPOffenseTooltip"), 
+      Apollo.FormatNumber(nPvPOffensiveRating, 2, true),
+      Apollo.FormatNumber(nPvPOffensePctOffset, 2, true),
+      Apollo.FormatNumber(nPvPDamageO, 2, true),
+      Apollo.FormatNumber(nPvPDamageI - nPvPOffensePctOffset, 2, true)
+    )
+  )
+  
+  -- PvP Healing
+  local nPvPHealingO = unitPlayer:GetPvPHealingO()
+  local nPvPHealingI = unitPlayer:GetPvPHealingI()
+  
   self:StoreSecondaryAttribute(
     Apollo.GetString("Character_PvPHealLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((unitPlayer:GetPvPHealingI() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_PvPHealingTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPOffensiveRating).fValue, 2, true), Apollo.FormatNumber(math.floor((unitPlayer:GetPvPHealingO() + 0.000005) * 10000) / 100, 2, true))
+    self:WritePercentageString(nPvPHealingI),
+    String_GetWeaselString(
+      Apollo.GetString("Character_PvPHealingTooltip"), 
+      Apollo.FormatNumber(nPvPOffensiveRating, 2, true),
+      Apollo.FormatNumber(nPvPOffensePctOffset, 2, true),
+      Apollo.FormatNumber(nPvPHealingO, 2, true), 
+      Apollo.FormatNumber(nPvPHealingI - nPvPOffensePctOffset, 2, true)
+    )
   )
+  
+  -- PvP Defense
+  local nPvPDefenseO = unitPlayer:GetPvPDefenseO()
+  local nPvPDefenseI = unitPlayer:GetPvPDefenseI()
+  local nPvPDefenseRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPDefensiveRating).fValue
+  local nPvPDefensePctOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPDefensePctOffset).fValue * 100
+  
   self:StoreSecondaryAttribute(
-    Apollo.GetString("Character_PvPDefLabel"),
-    String_GetWeaselString(Apollo.GetString("Character_PercentAppendLabel"), Apollo.FormatNumber(math.floor((1 - unitPlayer:GetPvPDefenseI() + 0.000005) * 10000) / 100, 2, true)),
-    String_GetWeaselString(Apollo.GetString("Character_PvPDefenseTooltip"), Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.PvPDefensiveRating).fValue, 2, true), Apollo.FormatNumber(math.floor((1 - unitPlayer:GetPvPDefenseO() + 0.000005) * 10000) / 100, 2, true))
+    Item.GetPropertyName(Unit.CodeEnumProperties.PvPDefensePctOffset),
+    self:WritePercentageString(nPvPDefenseI),
+    String_GetWeaselString(
+      Apollo.GetString("Character_PvPDefenseTooltip"),
+      Apollo.FormatNumber(nPvPDefenseRating, 2, true),
+      Apollo.FormatNumber(nPvPDefensePctOffset, 2, true),
+      Apollo.FormatNumber(nPvPDefenseO, 2, true),
+      Apollo.FormatNumber(nPvPDefenseI - nPvPDefensePctOffset, 2, true)
+    )
   )
 end
 
@@ -425,23 +692,23 @@ function ProtoArmory:CollectEquipment()
       
       local itemRuneData = itemEquipped:GetRuneSlots()
       
-      if itemRuneData then
+      if itemRuneData and itemRuneData.arRuneSlots then
         self.tData.arEquippedItems[itemSlot]["Runes"] = {}
         
         for nRuneIndex, tCurrRuneSlot in pairs(itemRuneData.arRuneSlots) do
-          local itemRune = Item.GetDataFromId(tCurrRuneSlot.idRune)
+          local tDetailedInfo = Item.GetDetailedInfo(tCurrRuneSlot.itemRune)
           
-          if itemRune then
-            local runeInfo = itemRune:GetRuneInfo()
-            
-            self.tData.arEquippedItems[itemSlot]["Runes"][nRuneIndex] = {
-              strName = itemRune:GetName(),
-              strType = runeIdToString[tCurrRuneSlot.eType],
-              nId = itemRune:GetItemId(),
-              strAttribute = runeInfo.strUnitPropertyName,
-              nBudget = itemInfo.tPrimary.tRunes.arRuneSlots[nRuneIndex].nBudget,
-              strQuality = qualityIdToString[itemRune:GetItemQuality()]                        
+          if tDetailedInfo and tDetailedInfo.tPrimary then            
+            local tData = {
+              strName = tDetailedInfo.tPrimary.strName,
+              strType = runeIdToString[tDetailedInfo.tPrimary.eType],
+              nId = tDetailedInfo.tPrimary.nId,
+              strQuality = qualityIdToString[tDetailedInfo.tPrimary.eQuality],
+              nBudget = tDetailedInfo.tPrimary.arBudgetBasedProperties[1].nValue,
+              strAttribute = tDetailedInfo.tPrimary.arBudgetBasedProperties[1].strName
             }
+            
+            table.insert(self.tData.arEquippedItems[itemSlot]["Runes"], tData)
           end
         end
       end
@@ -470,7 +737,7 @@ end
 -- Collects all the pets available for the player and stores them inside the
 -- arPets array.
 function ProtoArmory:CollectPets()
-  local arPets = GameLib.GetVanityPetList()
+  local arPets = CollectiblesLib.GetVanityPetList()
   
   for i = 1, #arPets do
     if arPets[i].bIsKnown then
@@ -485,7 +752,7 @@ function ProtoArmory:CollectPets()
 end
 
 function ProtoArmory:CollectMounts()
-  local arMounts = GameLib.GetMountList()
+  local arMounts = CollectiblesLib.GetMountList()
   
   for i = 1, #arMounts do
     if arMounts[i].bIsKnown then
@@ -574,20 +841,31 @@ end
 function ProtoArmory:CollectHousing()
   local rResidence = HousingLib.GetResidence()
   
-  self.tData.arHousing = {
-    strName = rResidence:GetPropertyName(),
-    nInternalDecor = rResidence:GetNumPlacedDecorInterior(),
-    nExternalDecor = rResidence:GetNumPlacedDecorExterior(),
-    nInternalLimit = rResidence:GetMaxPlacedDecorInterior(),
-    nExternalLimit = rResidence:GetMaxPlacedDecorExterior(),
-    nMaxOwnedDecor = rResidence:GetMaxOwnedDecor(),
-    nOwnedDecor = rResidence:GetNumOwnedDecor()    
-  }  
+  if rResidence then
+    self.tData.arHousing = {
+      strName = rResidence:GetPropertyName(),
+      nInternalDecor = rResidence:GetNumPlacedDecorInterior(),
+      nExternalDecor = rResidence:GetNumPlacedDecorExterior(),
+      nInternalLimit = rResidence:GetMaxPlacedDecorInterior(),
+      nExternalLimit = rResidence:GetMaxPlacedDecorExterior(),
+      nMaxOwnedDecor = rResidence:GetMaxOwnedDecor(),
+      nOwnedDecor = rResidence:GetNumOwnedDecor()    
+    }
+  end  
 end
 
 -----------------------------------------------------------------------------------------------
 -- Helpers
 -----------------------------------------------------------------------------------------------
+
+-- Write the provided value as a 2-digit string by utilizing the Apollo Library
+-- and WeaselString functions.
+function ProtoArmory:WritePercentageString(nValue)
+  String_GetWeaselString(
+    Apollo.GetString("Character_PercentAppendLabel"), 
+    Apollo.FormatNumber(nValue, 2, true)
+  )
+end
 
 -- Collects all the PvP Teams that a player belongs to and returns them in a specific
 -- Table structure for further usage.
