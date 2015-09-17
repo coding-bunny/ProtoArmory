@@ -21,35 +21,35 @@ local ProtoArmory = {}
 local XmlDocument = {}
 local classIdToString = {
   [GameLib.CodeEnumClass.Warrior] = Apollo.GetString("ClassWarrior"),
-	[GameLib.CodeEnumClass.Engineer] = Apollo.GetString("ClassEngineer"),
-	[GameLib.CodeEnumClass.Esper] = Apollo.GetString("ClassESPER"),
-	[GameLib.CodeEnumClass.Medic] = Apollo.GetString("ClassMedic"),
-	[GameLib.CodeEnumClass.Stalker] = Apollo.GetString("ClassStalker"),
-	[GameLib.CodeEnumClass.Spellslinger] = Apollo.GetString("ClassSpellslinger"),
+  [GameLib.CodeEnumClass.Engineer] = Apollo.GetString("ClassEngineer"),
+  [GameLib.CodeEnumClass.Esper] = Apollo.GetString("ClassESPER"),
+  [GameLib.CodeEnumClass.Medic] = Apollo.GetString("ClassMedic"),
+  [GameLib.CodeEnumClass.Stalker] = Apollo.GetString("ClassStalker"),
+  [GameLib.CodeEnumClass.Spellslinger] = Apollo.GetString("ClassSpellslinger"),
 }
 local pathIdToString = {
   [PlayerPathLib.PlayerPathType_Soldier] = Apollo.GetString("PlayerPathSoldier"),
- 	[PlayerPathLib.PlayerPathType_Settler] = Apollo.GetString("PlayerPathSettler"),
- 	[PlayerPathLib.PlayerPathType_Scientist] = Apollo.GetString("PlayerPathScientist"),
- 	[PlayerPathLib.PlayerPathType_Explorer] = Apollo.GetString("PlayerPathExplorer"),
+  [PlayerPathLib.PlayerPathType_Settler] = Apollo.GetString("PlayerPathSettler"),
+  [PlayerPathLib.PlayerPathType_Scientist] = Apollo.GetString("PlayerPathScientist"),
+  [PlayerPathLib.PlayerPathType_Explorer] = Apollo.GetString("PlayerPathExplorer"),
 }
 local factionIdToString = {
-	[Unit.CodeEnumFaction.ExilesPlayer] = Apollo.GetString("CRB_Exile"),
-	[Unit.CodeEnumFaction.DominionPlayer] = Apollo.GetString("CRB_Dominion"),
+  [Unit.CodeEnumFaction.ExilesPlayer] = Apollo.GetString("CRB_Exile"),
+  [Unit.CodeEnumFaction.DominionPlayer] = Apollo.GetString("CRB_Dominion"),
 }
 local raceIdToString = {
-	[GameLib.CodeEnumRace.Human] = Apollo.GetString("RaceHuman"),
-	[GameLib.CodeEnumRace.Granok] = Apollo.GetString("RaceGranok"),
-	[GameLib.CodeEnumRace.Aurin] = Apollo.GetString("RaceAurin"),
-	[GameLib.CodeEnumRace.Draken] = Apollo.GetString("RaceDraken"),
-	[GameLib.CodeEnumRace.Mechari] = Apollo.GetString("RaceMechari"),
-	[GameLib.CodeEnumRace.Chua] = Apollo.GetString("RaceChua"),
-	[GameLib.CodeEnumRace.Mordesh] = Apollo.GetString("CRB_Mordesh"),
+  [GameLib.CodeEnumRace.Human] = Apollo.GetString("RaceHuman"),
+  [GameLib.CodeEnumRace.Granok] = Apollo.GetString("RaceGranok"),
+  [GameLib.CodeEnumRace.Aurin] = Apollo.GetString("RaceAurin"),
+  [GameLib.CodeEnumRace.Draken] = Apollo.GetString("RaceDraken"),
+  [GameLib.CodeEnumRace.Mechari] = Apollo.GetString("RaceMechari"),
+  [GameLib.CodeEnumRace.Chua] = Apollo.GetString("RaceChua"),
+  [GameLib.CodeEnumRace.Mordesh] = Apollo.GetString("CRB_Mordesh"),
 }
 local genderIdToString = {
-	[Unit.CodeEnumGender.Male]	= Apollo.GetString("CRB_Male"),
-	[Unit.CodeEnumGender.Female]	= Apollo.GetString("CRB_Female"),
-	[Unit.CodeEnumGender.Uni]	= Apollo.GetString("CRB_Unknown")
+  [Unit.CodeEnumGender.Male]	= Apollo.GetString("CRB_Male"),
+  [Unit.CodeEnumGender.Female]	= Apollo.GetString("CRB_Female"),
+  [Unit.CodeEnumGender.Uni]	= Apollo.GetString("CRB_Unknown")
 }
 local slotsIdToString = {
 	[GameLib.CodeEnumEquippedItems.Chest] = Apollo.GetString("InventorySlot_Chest"),
@@ -284,6 +284,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nStrikethrough = unitPlayer:GetStrikethroughChance().nAmount
   local nStrikethroughRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidReduce).fValue
   local nBaseAvoidanceChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidReduceChance).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseAvoidReduceChance),
     self:WritePercentageString(nStrikethrough),
@@ -299,6 +300,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nCritChance = unitPlayer:GetCritChance().nAmount 
   local nCritSeverityIncrease = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_CritChanceIncrease).fValue
   local nCritChanceBase = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCritChance).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseCritChance),
     self:WritePercentageString(nCritChance),
@@ -314,6 +316,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nCritSeverity = unitPlayer:GetCritSeverity().nAmount
   local nCritSeverityRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCritSeverityIncrease).fValue
   local nCritSeverityMultiplier = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.CriticalHitSeverityMultiplier).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.CriticalHitSeverityMultiplier),
     self:WritePercentageString(nCritSeverity),
@@ -329,6 +332,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nMultiHitChance = unitPlayer:GetMultiHitChance().nAmount
   local nRatingMultiHitChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingMultiHitChance).fValue * 100
   local nBaseMultiHitChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseMultiHitChance).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseMultiHitChance),
     self:WritePercentageString(nMultiHitChance),
@@ -344,6 +348,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nMultiHitSeverity = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingMultiHitAmount).fValue
   local nMultiHitAmount = unitPlayer:GetMultiHitAmount().nAmount
   local nMultiHitBaseAmount = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseMultiHitAmount).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseMultiHitAmount),
     self:WritePercentageString(nMultiHitAmount),
@@ -358,7 +363,8 @@ function ProtoArmory:CollectSecondaryAttributes()
   -- Vigor
   local nVigor = unitPlayer:GetVigor().nAmount
   local nVigorRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingVigor).fValue
-  local nBaseVigor = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseVigor).fValue * 100  
+  local nBaseVigor = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseVigor).fValue * 100
+    
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseVigor),
     self:WritePercentageString(nVigor),
@@ -374,6 +380,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nArmorPenetration = unitPlayer:GetArmorPierce().nAmount
   local nArmorPenetrationRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingArmorPierce).fValue
   local nArmorPenetrationBase = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.IgnoreArmorBase).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.IgnoreArmorBase),
     self:WritePercentageString(nArmorPenetration),
@@ -392,6 +399,7 @@ function ProtoArmory:CollectSecondaryAttributes()
   local nPhysicalMitigationOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetPhysical).fValue
   local nPhysicalMitigationPctOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue
   local nResistPhysical = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistPhysical).fValue
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.DamageMitigationPctOffsetPhysical),
     self:WritePercentageString(nPhysicalMitigation),
@@ -406,77 +414,103 @@ function ProtoArmory:CollectSecondaryAttributes()
   )
 
   -- Technology Mitigation
+  local nTechMitigation = unitPlayer:GetTechMitigation().nAmount
+  local nTechMitigationRating = unitPlayer:GetTechMitigationRating()
+  local nResistTech = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistTech).fValue
+  local nTechMitigationPctOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech).fValue
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech),
-    self:WritePercentageString(unitPlayer:GetTechMitigation().nAmount),
+    self:WritePercentageString(nTechMitigation),
     String_GetWeaselString(
       Apollo.GetString("Character_TechMitTooltip"),
-      Apollo.FormatNumber(unitPlayer:GetTechMitigationRating() + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetTechMitigation().nAmount - ((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100), 2, true),
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistTech).fValue, 2, true),
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true), 
-      Apollo.FormatNumber((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetTech).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100, 2, true))
+      Apollo.FormatNumber(nTechMitigationRating + nArmor, 2, true), 
+      Apollo.FormatNumber(nTechMitigation - ((nTechMitigationPctOffset + nPhysicalMitigationPctOffset) * 100), 2, true),
+      Apollo.FormatNumber(nResistTech, 2, true),
+      Apollo.FormatNumber(nArmor, 2, true), 
+      Apollo.FormatNumber((nTechMitigationPctOffset + nPhysicalMitigationPctOffset) * 100, 2, true))
   )
 
   -- Magic Mitigation
+  local nMagicMitigation = unitPlayer:GetMagicMitigation().nAmount
+  local nMagicMitigationRating = unitPlayer:GetMagicMitigationRating()
+  local nMagicMitigationOffset = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic).fValue
+  local nResistMagic = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistMagic).fValue
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic),
     self:WritePercentageString(unitPlayer:GetMagicMitigation().nAmount),
     String_GetWeaselString(
       Apollo.GetString("Character_MagicMitTooltip"), 
-      Apollo.FormatNumber(unitPlayer:GetMagicMitigationRating() + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetMagicMitigation().nAmount - ((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100), 2, true),
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.ResistMagic).fValue, 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Armor).fValue, 2, true),
-      Apollo.FormatNumber((unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffsetMagic).fValue + unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.DamageMitigationPctOffset).fValue) * 100, 2, true)
+      Apollo.FormatNumber(nMagicMitigationRating + nArmor, 2, true), 
+      Apollo.FormatNumber(nMagicMitigation - ((nMagicMitigationOffset + nPhysicalMitigationPctOffset) * 100), 2, true),
+      Apollo.FormatNumber(nResistMagic, 2, true), 
+      Apollo.FormatNumber(nArmor, 2, true),
+      Apollo.FormatNumber((nMagicMitigationOffset + nPhysicalMitigationPctOffset) * 100, 2, true)
     )
   )
   
   -- Glance Mitigation
+  local nGlance = unitPlayer:GetGlanceAmount().nAmount
+  local nGlanceRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingGlanceAmount).fValue
+  local nBaseGlance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceAmount).fValue  * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseGlanceAmount),
-    self:WritePercentageString(unitPlayer:GetGlanceAmount().nAmount),
+    self:WritePercentageString(nGlance),
     String_GetWeaselString(
       Apollo.GetString("Character_GlanceSeverityTooltip"), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingGlanceAmount).fValue, 2, true),
-      Apollo.FormatNumber(unitPlayer:GetGlanceAmount().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceAmount).fValue  * 100), 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceAmount).fValue * 100, 2, true)
+      Apollo.FormatNumber(nGlanceRating, 2, true),
+      Apollo.FormatNumber(nGlance - nBaseGlance, 2, true), 
+      Apollo.FormatNumber(nBaseGlance, 2, true)
     )
   )
   
   -- Glance Chance
+  local nGlanceChance = unitPlayer:GetGlanceChance().nAmount
+  local nGlanceChanceRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingGlanceChance).fValue
+  local nBaseGlanceChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceChance).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseGlanceChance),
-    self:WritePercentageString(unitPlayer:GetGlanceChance().nAmount),
+    self:WritePercentageString(nGlanceChance),
     String_GetWeaselString(
       Apollo.GetString("Character_GlanceChanceTooltip"),
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingGlanceChance).fValue, 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetGlanceChance().nAmount -(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceChance).fValue * 100), 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseGlanceChance).fValue * 100, 2, true)
+      Apollo.FormatNumber(nGlanceChanceRating, 2, true), 
+      Apollo.FormatNumber(nGlanceChance - nBaseGlanceChance, 2, true), 
+      Apollo.FormatNumber(nBaseGlanceChance, 2, true)
     )
   )
 
   -- Critical Mitigation
+  local nCriticalMitigation = unitPlayer:GetCriticalMitigation().nAmount
+  local nCriticalMitigationRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCriticalMitigation).fValue
+  local nBaseCriticalMitigation = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCriticalMitigation).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseCriticalMitigation),
-    self:WritePercentageString(unitPlayer:GetCriticalMitigation().nAmount),
+    self:WritePercentageString(nCriticalMitigation),
     String_GetWeaselString(
       Apollo.GetString("Character_CritMitigationTooltip"),
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.RatingCriticalMitigation).fValue, 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetCriticalMitigation().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCriticalMitigation).fValue * 100), 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseCriticalMitigation).fValue * 100, 2, true)
+      Apollo.FormatNumber(nCriticalMitigationRating, 2, true), 
+      Apollo.FormatNumber(nCriticalMitigation - nBaseCriticalMitigation, 2, true), 
+      Apollo.FormatNumber(nBaseCriticalMitigation, 2, true)
     )
   )
  
   -- Deflect Chance
+  local nDeflectChance = unitPlayer:GetDeflectChance().nAmount
+  local nDeflectChanceRating = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidIncrease).fValue
+  local nBaseDeflectChance = unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidChance).fValue * 100
+  
   self:StoreSecondaryAttribute(
     Item.GetPropertyName(Unit.CodeEnumProperties.BaseAvoidChance),
-    self:WritePercentageString(unitPlayer:GetDeflectChance().nAmount),
+    self:WritePercentageString(nDeflectChance),
     String_GetWeaselString(
       Apollo.GetString("Character_DeflectTooltip"), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.Rating_AvoidIncrease).fValue, 2, true),
-      Apollo.FormatNumber(unitPlayer:GetDeflectChance().nAmount - (unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidChance).fValue * 100), 2, true), 
-      Apollo.FormatNumber(unitPlayer:GetUnitProperty(Unit.CodeEnumProperties.BaseAvoidChance).fValue * 100, 2, true)
+      Apollo.FormatNumber(nDeflectChanceRating, 2, true),
+      Apollo.FormatNumber(nDeflectChance - nBaseDeflectChance, 2, true), 
+      Apollo.FormatNumber(nBaseDeflectChance, 2, true)
     )
   )
   
